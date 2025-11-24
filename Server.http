@@ -1,0 +1,26 @@
+@Server_HostAddress = http://localhost:5041
+
+GET {{Server_HostAddress}}/api/auth/register
+Accept: application/json
+
+###
+
+GET {{Server_HostAddress}}/api/auth/login
+Accept: application/json
+
+###
+
+GET {{Server_HostAddress}}/api/channel
+Accept: application/json
+
+###
+
+GET {{Server_HostAddress}}/api/messages/channel/{channelId}
+Accept: application/json
+
+###
+
+GET {{Server_HostAddress}}/weatherforecast
+Accept: application/json
+
+###
