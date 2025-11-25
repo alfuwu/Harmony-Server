@@ -12,20 +12,19 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
 
     public async Task<RegistrationCompleteDto> RegisterAsync(RegisterDto dto) {
         if (dto.Username == null)
-            throw new InvalidDataException("Username must be provided");
-        if (dto.Username.Length < 2)
-            throw new InvalidDataException("Username is too short");
-        else if (dto.Username.Length > 32)
-            throw new InvalidDataException("Username is too long");
-        //dto.Username = dto.Username.ToLower();
+            throw new ArgumentException("Username must be provided");
+        if (dto.Username.Length is < 2 or > 32)
+            throw new ArgumentException("Username must be between 2 and 32 characters long");
+        dto.Username = dto.Username.ToLower();
 
         var exists = (await _users.FindAsync(u => u.Username == dto.Username)).Any();
         if (exists)
-            throw new Exception("Username already exists");
+            throw new ArgumentException("Username already exists");
 
         var user = new User {
             Username = dto.Username,
             PasswordHash = HashPassword(dto.Password),
+            JoinedAt = DateTime.UtcNow,
             LastSeen = DateTime.UtcNow
         };
         await _users.AddAsync(user);
@@ -39,7 +38,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
     public async Task<string> LoginAsync(LoginDto dto) {
         var found = (await _users.FindAsync(u => u.Username == dto.Username)).FirstOrDefault();
         if (found == null || !Verify(dto.Password, found.PasswordHash))
-            throw new Exception("Invalid credentials");
+            throw new InvalidDataException("Invalid credentials");
 
         found.LastSeen = DateTime.UtcNow;
         await _users.UpdateAsync(found);

@@ -4,11 +4,12 @@ public enum ChannelType : ushort {
     Text = 1,           // default text channel
     Voice = 2,          // default voice channel
     Announcement = 3,   // announcement channel
-    Thread = 4,         // thread, parented to some other channel
-    Forum = 5,          // forum, no normal text stuff but allows creating threads and displays those as posts
-    Calendar = 6,       // calendar channel, used for scheduling & showing events
-    Document = 7,       // document channel, used for collaborative document editing
-    DM = 8,             // direct message channel between two users
-    GroupDM = 9,        // group direct message channel
-    Unknown = 65535     // unknown channel type
+    Rules = 4,          // rules channel
+    Thread = 5,         // thread, parented to some other channel
+    Forum = 6,          // forum, no normal text stuff but allows creating threads and displays those as posts
+    Calendar = 7,       // calendar channel, used for scheduling & showing events
+    Document = 8,       // document channel, used for collaborative document editing
+    DM = 9,             // direct message channel between two users
+    GroupDM = 10,       // group direct message channel
+    Unknown = 11        // unknown channel type
 }

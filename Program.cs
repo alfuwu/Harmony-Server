@@ -8,8 +8,10 @@ using Server.Hubs;
 using Server.Middleware;
 using Server.Models;
 using Server.Repositories;
+using Server.Repositories.PrivateChannels;
 using Server.Services;
 using Server.Services.Background;
+using Server.Services.PrivateChannels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,11 +54,17 @@ builder.Services.AddSignalR();
 builder.Services.AddScoped<IRepository<User>, UserRepository>();
 builder.Services.AddScoped<IRepository<GuildServer>, ServerRepository>();
 builder.Services.AddScoped<IRepository<Channel>, ChannelRepository>();
+builder.Services.AddScoped<IRepository<ThreadChannel>, ThreadRepository>();
+builder.Services.AddScoped<IRepository<DMChannel>, DMChannelRepository>();
+builder.Services.AddScoped<IRepository<GroupDMChannel>, GroupDMChannelRepository>();
 builder.Services.AddScoped<IRepository<Message>, MessageRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IServerService, ServerService>();
 builder.Services.AddScoped<IChannelService, ChannelService>();
+builder.Services.AddScoped<IThreadService, ThreadService>();
+builder.Services.AddScoped<IDMChannelService, DMChannelService>();
+builder.Services.AddScoped<IGroupDMChannelService, GroupDMChannelService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 
 // background services
@@ -106,7 +114,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope()) {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 }
 
 if (app.Environment.IsDevelopment()) {

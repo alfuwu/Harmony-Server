@@ -1,16 +1,19 @@
 ﻿using Server.Models.Enums;
 
 namespace Server.Models;
-public class Role {
-    public long Id { get; set; }
-    public string? Name { get; set; }
+public class Role : Identifiable {
+    public string Name { get; set; } = "";
     public string? Description { get; set; }
+    public string? Icon { get; set; }
     public long[]? LinkedRoles { get; set; }
     public long[]? MutuallyExclusiveRoles { get; set; }
-    public RolePrerequisite[]? Prerequisites { get; set; }
-    public long Permissions { get; set; }
-    public int Priority { get; set; }
-    public int DisplayPriority { get; set; }
+    public List<RolePrerequisite>? Prerequisites { get; set; }
+    public ulong Permissions { get; set; }
+    public short Priority { get; set; }
+    public ushort Position { get; set; }
+    public ulong Flags { get; set; }
+    public int? Color { get; set; }
+    public List<int>? Colors { get; set; }
     public RoleDisplayType DisplayType { get; set; }
 
     // granular perms

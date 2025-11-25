@@ -1,6 +1,5 @@
 ﻿using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Server.Models;
@@ -19,9 +18,9 @@ public static class JwtTokenHelper {
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         Claim[] claims = [
-            new Claim("nam", user.Username!),
-            new Claim("uid", user.Id.ToString()),
-            new Claim("pwd", user.PasswordHash.ToString())
+            new("nam", user.Username!),
+            new("uid", user.Id.ToString()),
+            new("pwd", user.PasswordHash.ToString())
         ];
 
         var tokenDescriptor = new SecurityTokenDescriptor {
@@ -41,7 +40,6 @@ public static class JwtTokenHelper {
         User? u = await users.GetByIdAsync(val);
         if (u == null || u.IsDeleted || u.Username != user.FindFirst("nam")?.Value || u.PasswordHash != user.FindFirst("pwd")?.Value)
             throw new UnauthorizedAccessException("User does not exist");
-        Console.WriteLine($"Extracted user id from token: {val}");
         return val;
     }
 }

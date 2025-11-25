@@ -7,22 +7,23 @@ public class MessageService(IRepository<Message> messages) : IMessageService {
     private readonly IRepository<Message> _messages = messages;
 
     public async Task<Message> SendMessageAsync(MessageCreateDto dto) {
+        if (dto.AuthorId > 0)
+            if (string.IsNullOrWhiteSpace(dto.Content))
+                throw new ArgumentException("Message content cannot be empty");
+            else if (dto.Content.Length > 5000)
+                throw new ArgumentException("Message content exceeds maximum length of 5000 characters");
         var m = new Message {
-            //Id = Random.Shared.NextInt64(),
             ChannelId = dto.ChannelId,
             AuthorId = dto.AuthorId,
             Content = dto.Content,
             Timestamp = DateTime.UtcNow
         };
-        await _messages.AddAsync(m);
-        //dto.Id = m.Id;
-        //dto.Timestamp = m.Timestamp;
-        return m;
+        return await _messages.AddAsync(m);
     }
 
     public async Task DeleteMessageAsync(MessageIdDto dto, long userId) {
         var m = await _messages.GetAsync(dto.Id) ?? throw new KeyNotFoundException("Message not found");
-        if (m.AuthorId != userId) // check for message deletion perms here too
+        if (m.AuthorId != userId && userId > 0) // check for message deletion perms here too
             throw new UnauthorizedAccessException("You cannot delete this message");
 
         await _messages.DeleteAsync(m);
