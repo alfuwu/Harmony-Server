@@ -19,8 +19,3 @@ GET {{Server_HostAddress}}/api/messages/channel/{channelId}
 Accept: application/json
 
 ###
-
-GET {{Server_HostAddress}}/weatherforecast
-Accept: application/json
-
-###

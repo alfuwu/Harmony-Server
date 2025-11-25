@@ -8,4 +8,5 @@ public class Message {
     public DateTime Timestamp { get; set; }
     public DateTime EditedTimestamp { get; set; }
     public bool IsDeleted { get; set; }
+    public bool IsPinned { get; set; }
 }

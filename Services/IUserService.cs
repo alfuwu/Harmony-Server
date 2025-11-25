@@ -1,8 +1,9 @@
 ﻿using Server.DTOs;
+using Server.Models;
 
 namespace Server.Services;
 public interface IUserService {
-    Task<UserDto> RegisterAsync(RegisterDto dto);
+    Task<RegistrationCompleteDto> RegisterAsync(RegisterDto dto);
     Task<string> LoginAsync(LoginDto dto);
-    Task<UserDto?> GetByIdAsync(long id);
+    Task<User?> GetByIdAsync(long id);
 }

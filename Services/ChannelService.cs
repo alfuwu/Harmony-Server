@@ -6,21 +6,25 @@ namespace Server.Services;
 public class ChannelService(IRepository<Channel> channels) : IChannelService {
     private readonly IRepository<Channel> _channels = channels;
 
-    public async Task<ChannelDto> CreateChannelAsync(ChannelDto dto) {
+    public async Task<Channel> CreateChannelAsync(ChannelCreateDto dto) {
         var c = new Channel {
-            Id = Random.Shared.NextInt64(),
+            //Id = Random.Shared.NextInt64(),
+            ServerId = dto.ServerId,
             Name = dto.Name,
+            Description = dto.Description
         };
-        await _channels.AddAsync(c);
-        dto.Id = c.Id;
-        return dto;
+        return await _channels.AddAsync(c);
     }
 
-    public async Task<IEnumerable<ChannelDto>> GetAllChannelsAsync() {
-        var all = await _channels.GetAllAsync();
-        return all.Select(c => new ChannelDto {
-            Id = c.Id,
-            Name = c.Name
-        });
+    public async Task DeleteChannelAsync(IdDto dto, long userId) {
+        var c = await _channels.GetAsync(dto.Id) ?? throw new KeyNotFoundException("Channel not found");
+        if (c.ServerId != userId) // check for channel management perms here
+            throw new UnauthorizedAccessException("You cannot delete this channel");
+
+        await _channels.DeleteAsync(c);
+    }
+
+    public async Task<IEnumerable<Channel>> GetAllChannelsAsync(long serverId) {
+        return await _channels.GetAllAsync();
     }
 }

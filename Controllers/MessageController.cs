@@ -4,11 +4,12 @@ using Server.Services;
 
 namespace Server.Controllers;
 [ApiController]
-[Route("api/messages")]
+[Route("api/")]
 [Authorize]
 public class MessageController(IMessageService messageService) : ControllerBase {
     private readonly IMessageService _messageService = messageService;
 
-    [HttpGet("channel/{channelId}")]
-    public async Task<IActionResult> GetMessages(long channelId) => Ok(await _messageService.GetRecentMessagesAsync(channelId));
+    [HttpGet("channel/{channelId}/messages")]
+    public async Task<IActionResult> GetMessages([FromRoute] long channelId, [FromQuery] long offset = 0, [FromQuery] byte limit = 50) =>
+        Ok(await _messageService.GetRecentMessagesAsync(channelId, offset, limit));
 }

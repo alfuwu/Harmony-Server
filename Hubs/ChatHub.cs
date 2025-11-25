@@ -31,7 +31,7 @@ public class ChatHub(IMessageService messageService, IUserService userService) :
         if (!long.TryParse(uid, out var senderId))
             throw new HubException("Invalid user id");
 
-        var dto = new MessageDto {
+        var dto = new MessageCreateDto {
             ChannelId = channelId,
             AuthorId = senderId,
             Content = content

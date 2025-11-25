@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Server.Data;
 using Server.Hubs;
 using Server.Middleware;
@@ -19,7 +20,25 @@ var configuration = builder.Configuration;
 builder.Services.AddControllers();
 // see more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc("v1", new() { Title = "Server API", Version = "v1" });
+
+    c.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = JwtBearerDefaults.AuthenticationScheme,
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token like this: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(doc => new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, doc),
+            new List<string>()
+        }
+    });
+});
 
 // ef core - sql server (switch to InMemory for quick testing)
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -31,10 +50,12 @@ builder.Services.AddSignalR();
 
 // repositories & services
 builder.Services.AddScoped<IRepository<User>, UserRepository>();
+builder.Services.AddScoped<IRepository<GuildServer>, ServerRepository>();
 builder.Services.AddScoped<IRepository<Channel>, ChannelRepository>();
 builder.Services.AddScoped<IRepository<Message>, MessageRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IServerService, ServerService>();
 builder.Services.AddScoped<IChannelService, ChannelService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 
@@ -47,35 +68,34 @@ builder.Services.Configure<RateLimitOptions>(configuration.GetSection("RateLimit
 // jwt auth
 var jwtSection = configuration.GetSection("Jwt");
 var jwtKey = jwtSection.GetValue<string>("Key");
-var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? throw new Exception("jwt key is not defined")));
 
 builder.Services.AddAuthentication(options => {
-options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options => {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = signingKey,
         ValidateIssuer = true,
-        ValidIssuer = jwtSection.GetValue<string>("Issuer"),
         ValidateAudience = true,
-        ValidAudience = jwtSection.GetValue<string>("Audience"),
-        ValidateLifetime = true
+        ValidateLifetime = false,
+
+        IssuerSigningKey = signingKey,
+        ValidIssuer = jwtSection.GetValue<string>("Issuer"),
+        ValidAudience = jwtSection.GetValue<string>("Audience")
     };
 
-    // enable signalr to read token from querystring as "access_token"
     options.Events = new JwtBearerEvents {
-        OnMessageReceived = context =>
-        {
-            var accessToken = context.Request.Query["access_token"].FirstOrDefault();
+        /*OnMessageReceived = context => {
+            var authToken = context.Request.Headers.Authorization.FirstOrDefault();
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chat")) {
-                context.Token = accessToken;
-            }
+            if (!string.IsNullOrEmpty(authToken) && path.StartsWithSegments("/chat"))
+                context.Token = authToken;
+
             return Task.CompletedTask;
-        }
+        }*/
     };
 });
 

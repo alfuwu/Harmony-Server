@@ -10,11 +10,14 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
     private readonly IRepository<User> _users = users;
     private readonly IConfiguration _configuration = configuration;
 
-    public async Task<UserDto> RegisterAsync(RegisterDto dto) {
-        if (dto.Username?.Length < 2)
-            throw new Exception("Username is too short");
-        else if (dto.Username?.Length > 25)
-            throw new Exception("Username is too long");
+    public async Task<RegistrationCompleteDto> RegisterAsync(RegisterDto dto) {
+        if (dto.Username == null)
+            throw new InvalidDataException("Username must be provided");
+        if (dto.Username.Length < 2)
+            throw new InvalidDataException("Username is too short");
+        else if (dto.Username.Length > 32)
+            throw new InvalidDataException("Username is too long");
+        //dto.Username = dto.Username.ToLower();
 
         var exists = (await _users.FindAsync(u => u.Username == dto.Username)).Any();
         if (exists)
@@ -26,9 +29,10 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
             LastSeen = DateTime.UtcNow
         };
         await _users.AddAsync(user);
-        return new UserDto {
+        return new RegistrationCompleteDto {
             Id = user.Id,
-            Username = user.Username
+            Username = user.Username,
+            Token = JwtTokenHelper.GenerateToken(user, _configuration)
         };
     }
 
@@ -42,14 +46,5 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
         return JwtTokenHelper.GenerateToken(found, _configuration);
     }
 
-    public async Task<UserDto?> GetByIdAsync(long id) {
-        var u = await _users.GetAsync(id);
-        if (u == null)
-            return null;
-
-        return new UserDto {
-            Id = u.Id,
-            Username = u.Username
-        };
-    }
+    public async Task<User?> GetByIdAsync(long id) => await _users.GetAsync(id);
 }
