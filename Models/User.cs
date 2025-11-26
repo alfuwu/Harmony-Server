@@ -1,5 +1,6 @@
 ﻿namespace Server.Models;
 public class User : Identifiable {
+    public string? DisplayName { get; set; }
     public string Username { get; set; } = "";
     public string PasswordHash { get; set; } = "";
     public string? Bio { get; set; }

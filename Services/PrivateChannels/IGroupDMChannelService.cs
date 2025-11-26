@@ -1,9 +1,9 @@
-﻿using Server.DTOs;
+﻿using Server.DTOs.Input;
 using Server.Models;
 
 namespace Server.Services.PrivateChannels;
-public interface IGroupDMChannelService {
-    Task<GroupDMChannel> CreateChannelAsync(PrivateChannelCreateDto dto, long userId);
-    Task DeleteChannelAsync(IdDto dto, long userId);
-    Task<IEnumerable<GroupDMChannel>> GetAllChannelsAsync(long userId);
+public interface IGroupDmChannelService {
+    Task<GroupDmChannel> CreateChannelAsync(PrivateChannelCreateDto dto, long userId);
+    Task DeleteChannelAsync(long channelId, long userId);
+    Task<IEnumerable<GroupDmChannel>> GetAllChannelsAsync(long userId);
 }

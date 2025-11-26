@@ -1,4 +1,4 @@
-﻿using Server.DTOs;
+﻿using Server.DTOs.Input;
 using Server.Models;
 using Server.Models.Enums;
 using Server.Repositories;
@@ -13,7 +13,7 @@ public class ChannelService(IRepository<Channel> channels, IRepository<GuildServ
         ChannelType.Thread
     ];
 
-    public async Task<Channel> CreateChannelAsync(ChannelCreateDto dto, long userId, long serverId) {
+    public async Task<Channel> CreateChannelAsync(ChannelCreateDto dto, long serverId, long userId) {
         if (dto.Name.Length is < 2 or > 128 && userId > 0)
             throw new ArgumentException("Channel name must be between 2 and 128 characters");
         if (dto.Description != null && dto.Description.Length > 2048 && userId > 0)
@@ -26,6 +26,10 @@ public class ChannelService(IRepository<Channel> channels, IRepository<GuildServ
         else if (dto.Type == ChannelType.Thread)
             throw new ArgumentException("Use the thread creation endpoint to create threads");
 
+        var server = await _servers.GetAsync(serverId) ?? throw new KeyNotFoundException("Server not found");
+        if (server.OwnerId != userId && userId > 0) // check for channel management perms here
+            throw new UnauthorizedAccessException("You cannot create a channel in this server");
+
         if (dto.ParentId.HasValue) {
             var parentChannel = await _channels.GetAsync(dto.ParentId.Value);
             if (parentChannel == null || parentChannel.ServerId != serverId)
@@ -33,6 +37,7 @@ public class ChannelService(IRepository<Channel> channels, IRepository<GuildServ
             else if (parentChannel.Type != ChannelType.Category)
                 throw new InvalidOperationException("Parent channel must be a category");
         }
+
         var c = new Channel {
             ParentId = dto.ParentId,
             ServerId = serverId,
@@ -47,8 +52,8 @@ public class ChannelService(IRepository<Channel> channels, IRepository<GuildServ
         return await _channels.AddAsync(c);
     }
 
-    public async Task DeleteChannelAsync(IdDto dto, long userId) {
-        var c = await _channels.GetAsync(dto.Id) ?? throw new KeyNotFoundException("Channel not found");
+    public async Task DeleteChannelAsync(long id, long userId) {
+        var c = await _channels.GetAsync(id) ?? throw new KeyNotFoundException("Channel not found");
         var server = await _servers.GetAsync(c.ServerId) ?? throw new KeyNotFoundException("Server not found (???)");
         if (server.OwnerId != userId && userId > 0) // check for channel management perms here
             throw new UnauthorizedAccessException("You cannot delete this channel");

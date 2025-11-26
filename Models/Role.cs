@@ -2,7 +2,9 @@
 
 namespace Server.Models;
 public class Role : Identifiable {
-    public string Name { get; set; } = "";
+    public long ServerId { get; set; }
+    public GuildServer Server { get; set; } = null!;
+    public string Name { get; set; } = "new role";
     public string? Description { get; set; }
     public string? Icon { get; set; }
     public long[]? LinkedRoles { get; set; }

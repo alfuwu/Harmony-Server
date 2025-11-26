@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTOs;
+using Server.DTOs.Output;
 using Server.Helpers;
 using Server.Services;
 
@@ -15,7 +16,7 @@ public class ServerController(IServerService serverService, IUserService userSer
     [HttpGet]
     public async Task<IActionResult> GetServers() {
         try {
-            return Ok(await _serverService.GetServersAsync(await JwtTokenHelper.GetId(_userService, User)));
+            return Ok((await _serverService.GetServersAsync(await JwtTokenHelper.GetId(_userService, User))).Select(s => new ServerDto(s)));
         } catch (UnauthorizedAccessException e) {
             return Unauthorized(new { error = e.Message });
         } catch (Exception e) {
@@ -26,7 +27,7 @@ public class ServerController(IServerService serverService, IUserService userSer
     [HttpPost]
     public async Task<IActionResult> CreateServer([FromBody] ServerCreateDto dto) {
         try {
-            return Ok(await _serverService.CreateServerAsync(dto, await JwtTokenHelper.GetId(_userService, User)));
+            return Ok(new ServerDto(await _serverService.CreateServerAsync(dto, await JwtTokenHelper.GetId(_userService, User))));
         } catch (UnauthorizedAccessException e) {
             return Unauthorized(new { error = e.Message });
         } catch (Exception e) {
@@ -34,10 +35,10 @@ public class ServerController(IServerService serverService, IUserService userSer
         }
     }
 
-    [HttpDelete]
-    public async Task<IActionResult> DeleteServer([FromBody] IdDto dto) {
+    [HttpDelete("{serverId}")]
+    public async Task<IActionResult> DeleteServer([FromRoute] long serverId) {
         try {
-            await _serverService.DeleteServerAsync(dto, await JwtTokenHelper.GetId(_userService, User));
+            await _serverService.DeleteServerAsync(serverId, await JwtTokenHelper.GetId(_userService, User));
             return Ok();
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
@@ -48,10 +49,23 @@ public class ServerController(IServerService serverService, IUserService userSer
         }
     }
 
-    [HttpPost("join")]
-    public async Task<IActionResult> JoinServer([FromBody] IdDto dto) {
+    [HttpGet("{serverId}/members")]
+    public async Task<IActionResult> GetMembers([FromRoute] long serverId, [FromQuery] int page = 0, [FromQuery] int pageSize = 50) {
         try {
-            await _serverService.JoinServerAsync(dto, await JwtTokenHelper.GetId(_userService, User));
+            return Ok((await _serverService.GetMembersAsync(serverId, await JwtTokenHelper.GetId(_userService, User), page, pageSize)).Select(m => new MemberDto(m)));
+        } catch (KeyNotFoundException e) {
+            return NotFound(new { error = e.Message });
+        } catch (UnauthorizedAccessException e) {
+            return Unauthorized(new { error = e.Message });
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
+    [HttpPost("{serverId}/join")]
+    public async Task<IActionResult> JoinServer([FromRoute] long serverId) {
+        try {
+            await _serverService.JoinServerAsync(serverId, await JwtTokenHelper.GetId(_userService, User));
             return Ok();
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });

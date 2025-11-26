@@ -1,4 +1,4 @@
-﻿namespace Server.DTOs;
+﻿namespace Server.DTOs.Input;
 public class RegistrationCompleteDto {
     public long Id { get; set; }
     public string Username { get; set; } = "";

@@ -1,6 +1,6 @@
 ﻿using Server.Models.Enums;
 
-namespace Server.DTOs;
+namespace Server.DTOs.Input;
 public class ChannelCreateDto {
     public long? ParentId { get; set; }
     public string Name { get; set; } = "";

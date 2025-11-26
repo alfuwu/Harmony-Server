@@ -9,6 +9,8 @@ public class MessageRepository(AppDbContext db) : IRepository<Message> {
 
     public async Task<Message> AddAsync(Message entity, bool save = true) {
         _db.Messages.Add(entity);
+        var c = await _db.AbstractChannels.FindAsync(entity.ChannelId);
+        c!.LastMessage = entity.Id;
         if (save)
             await _db.SaveChangesAsync();
         return entity;

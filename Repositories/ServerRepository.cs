@@ -18,10 +18,21 @@ public class ServerRepository(AppDbContext db) : IRepository<GuildServer> {
         if (save)
             await _db.SaveChangesAsync();
     }
-    public async Task<GuildServer?> GetAsync(long id) => await _db.Servers.FindAsync(id);
+    public async Task<GuildServer?> GetAsync(long id) => await _db.Servers
+        .Include(s => s.Members)
+        .ThenInclude(m => m.User)
+        .Include(s => s.Roles)
+        .Include(s => s.Emojis)
+        .FirstAsync(s => s.Id == id);
     public async Task<IEnumerable<GuildServer>> GetAllAsync() => await _db.Servers.ToListAsync();
     public async Task<IEnumerable<GuildServer>> GetForIdAsync(long userId) =>
-        await _db.Servers.Where(s => s.OwnerId == userId || s.Members.Contains(userId)).ToListAsync();
+        await _db.Servers
+            .Include(s => s.Roles)
+            .Include(s => s.Emojis)
+            .Where(s => s.OwnerId == userId || s.Members
+                .Select(m => m.UserId)
+                .Contains(userId))
+            .ToListAsync();
     public async Task UpdateAsync(GuildServer entity, bool save = true) {
         _db.Servers.Update(entity);
         if (save)

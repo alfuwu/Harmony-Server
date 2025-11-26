@@ -1,39 +1,52 @@
-﻿using Server.DTOs;
+﻿using Server.Data;
+using Server.DTOs;
 using Server.Models;
 using Server.Repositories;
 
 namespace Server.Services;
-public class ServerService(IRepository<GuildServer> servers, IRepository<Channel> channels, IRepository<Message> messages) : IServerService {
+public class ServerService(IRepository<GuildServer> servers, IRepository<Channel> channels, IRepository<Message> messages, AppDbContext db) : IServerService {
     private readonly IRepository<GuildServer> _servers = servers;
     private readonly IRepository<Channel> _channels = channels;
     private readonly IRepository<Message> _messages = messages;
+    private readonly AppDbContext _db = db;
 
     public async Task<GuildServer> CreateServerAsync(ServerCreateDto dto, long userId) {
         if (dto.Name.Length is < 2 or > 128 && userId > 0)
             throw new ArgumentException("Server name must be between 2 and 128 characters");
+        var m = new Member {
+            UserId = userId,
+            JoinedAt = DateTime.UtcNow,
+        };
         var s = new GuildServer {
             OwnerId = userId,
             Name = dto.Name,
             Description = dto.Description,
             Tags = dto.Tags,
             InviteUrls = dto.InviteUrls,
-            Members = [userId],
+            Members = [m],
             CreatedAt = DateTime.UtcNow
         };
-        return await _servers.AddAsync(s);
+        await _servers.AddAsync(s, false);
+        m.ServerId = s.Id;
+        await _servers.SaveAsync();
+        return s;
     }
 
-    public async Task JoinServerAsync(IdDto dto, long userId) {
-        var server = await _servers.GetAsync(dto.Id) ?? throw new KeyNotFoundException("Server not found");
-        if (server.Members.Contains(userId))
+    public async Task JoinServerAsync(long serverId, long userId) {
+        var server = await _servers.GetAsync(serverId) ?? throw new KeyNotFoundException("Server not found");
+        if (server.Members.Select(m => m.UserId).Contains(userId))
             throw new InvalidOperationException("User is already a member of this server");
 
-        server.Members.Add(userId);
+        server.Members.Add(new Member {
+            UserId = userId,
+            ServerId = serverId,
+            JoinedAt = DateTime.UtcNow,
+        });
         await _servers.UpdateAsync(server);
     }
 
-    public async Task DeleteServerAsync(IdDto dto, long userId) {
-        var server = await _servers.GetAsync(dto.Id) ?? throw new KeyNotFoundException("Server not found");
+    public async Task DeleteServerAsync(long serverId, long userId) {
+        var server = await _servers.GetAsync(serverId) ?? throw new KeyNotFoundException("Server not found");
         if (server.OwnerId != userId && userId > 0)
             throw new UnauthorizedAccessException("You are not the owner of this server");
 
@@ -59,4 +72,13 @@ public class ServerService(IRepository<GuildServer> servers, IRepository<Channel
 
     public async Task<GuildServer?> GetServerFromInviteUrlAsync(string inviteUrl) =>
         (await _servers.FindAsync(s => s.InviteUrls != null && s.InviteUrls.Contains(inviteUrl))).First();
+
+    public async Task<IEnumerable<Member>> GetMembersAsync(long serverId, long userId, int page, int pageSize) {
+        var server = await _servers.GetAsync(serverId) ?? throw new KeyNotFoundException("Server not found");
+        if (!server.Members.Select(m => m.UserId).Contains(userId))
+            throw new UnauthorizedAccessException("You are not a member of this server");
+        return server.Members
+            .Skip(page * pageSize)
+            .Take(pageSize);
+    }
 }

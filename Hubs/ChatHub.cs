@@ -32,11 +32,9 @@ public class ChatHub(IMessageService messageService, IUserService userService) :
             throw new HubException("Invalid user id");
 
         var dto = new MessageCreateDto {
-            ChannelId = channelId,
-            AuthorId = senderId,
             Content = content
         };
-        var saved = await _messageService.SendMessageAsync(dto);
+        var saved = await _messageService.SendMessageAsync(dto, channelId, senderId);
         await Clients.Group(channelId.ToString()).SendAsync("ReceiveMessage", saved);
     }
 }

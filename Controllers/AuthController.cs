@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Server.DTOs;
+using Server.DTOs.Input;
 using Server.Services;
 
 namespace Server.Controllers;
@@ -11,18 +11,16 @@ public class AuthController(IUserService userService) : ControllerBase {
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto) {
         try {
-            var user = await _userService.RegisterAsync(dto);
-            return Ok(user);
+            return Ok(await _userService.RegisterAsync(dto));
         } catch (Exception e) {
             return BadRequest(new { error = e.Message });
         }
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] LoginDto dto) {
+    public async Task<IActionResult> Login([FromBody] RegisterDto dto) {
         try {
-            var token = await _userService.LoginAsync(dto);
-            return Ok(new { token });
+            return Ok(new { token = await _userService.LoginAsync(dto) });
         } catch (Exception e) {
             return BadRequest(new { error = e.Message });
         }

@@ -6,7 +6,8 @@ public class GuildServer : Identifiable {
     public string? Icon { get; set; }
     public List<string>? Tags { get; set; }
     public List<string>? InviteUrls { get; set; }
-    public List<long> Members { get; set; } = [];
+    public List<Member> Members { get; set; } = [];
     public List<Role> Roles { get; set; } = [];
+    public List<Emoji> Emojis { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }

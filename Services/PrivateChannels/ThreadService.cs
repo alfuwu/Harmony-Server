@@ -1,4 +1,4 @@
-﻿using Server.DTOs;
+﻿using Server.DTOs.Input;
 using Server.Models;
 using Server.Models.Enums;
 using Server.Repositories;

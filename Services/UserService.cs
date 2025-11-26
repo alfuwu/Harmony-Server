@@ -1,4 +1,4 @@
-﻿using Server.DTOs;
+﻿using Server.DTOs.Input;
 using Server.Helpers;
 using Server.Models;
 using Server.Repositories;
@@ -15,7 +15,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
             throw new ArgumentException("Username must be provided");
         if (dto.Username.Length is < 2 or > 32)
             throw new ArgumentException("Username must be between 2 and 32 characters long");
-        dto.Username = dto.Username.ToLower();
+        //dto.Username = dto.Username.ToLower();
 
         var exists = (await _users.FindAsync(u => u.Username == dto.Username)).Any();
         if (exists)
@@ -35,7 +35,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration) 
         };
     }
 
-    public async Task<string> LoginAsync(LoginDto dto) {
+    public async Task<string> LoginAsync(RegisterDto dto) {
         var found = (await _users.FindAsync(u => u.Username == dto.Username)).FirstOrDefault();
         if (found == null || !Verify(dto.Password, found.PasswordHash))
             throw new InvalidDataException("Invalid credentials");

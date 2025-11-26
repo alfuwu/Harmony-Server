@@ -4,30 +4,30 @@ using Server.Data;
 using Server.Models;
 
 namespace Server.Repositories.PrivateChannels;
-public class DMChannelRepository(AppDbContext db) : IRepository<DMChannel> {
+public class DmChannelRepository(AppDbContext db) : IRepository<DmChannel> {
     private readonly AppDbContext _db = db;
 
-    public async Task<DMChannel> AddAsync(DMChannel entity, bool save = true) {
-        _db.DMChannels.Add(entity);
+    public async Task<DmChannel> AddAsync(DmChannel entity, bool save = true) {
+        _db.DmChannels.Add(entity);
         if (save)
             await _db.SaveChangesAsync();
         return entity;
     }
-    public async Task DeleteAsync(DMChannel entity, bool save = true) {
-        _db.DMChannels.Remove(entity);
+    public async Task DeleteAsync(DmChannel entity, bool save = true) {
+        _db.DmChannels.Remove(entity);
         if (save)
             await _db.SaveChangesAsync();
     }
-    public async Task<DMChannel?> GetAsync(long id) => await _db.DMChannels.FindAsync(id);
-    public async Task<IEnumerable<DMChannel>> GetAllAsync() => await _db.DMChannels.ToListAsync();
-    public async Task<IEnumerable<DMChannel>> GetForIdAsync(long userId) =>
-        await _db.DMChannels.Where(c => c.Members.Contains(userId)).ToListAsync();
-    public async Task UpdateAsync(DMChannel entity, bool save = true) {
-        _db.DMChannels.Update(entity);
+    public async Task<DmChannel?> GetAsync(long id) => await _db.DmChannels.FindAsync(id);
+    public async Task<IEnumerable<DmChannel>> GetAllAsync() => await _db.DmChannels.ToListAsync();
+    public async Task<IEnumerable<DmChannel>> GetForIdAsync(long userId) =>
+        await _db.DmChannels.Where(c => c.Members.Contains(userId) && !c.IsDeleted).ToListAsync();
+    public async Task UpdateAsync(DmChannel entity, bool save = true) {
+        _db.DmChannels.Update(entity);
         if (save)
             await _db.SaveChangesAsync();
     }
     public async Task SaveAsync() => await _db.SaveChangesAsync();
-    public async Task<IEnumerable<DMChannel>> FindAsync(Expression<Func<DMChannel, bool>> predicate) =>
-        await _db.DMChannels.Where(predicate).ToListAsync();
+    public async Task<IEnumerable<DmChannel>> FindAsync(Expression<Func<DmChannel, bool>> predicate) =>
+        await _db.DmChannels.Where(predicate).ToListAsync();
 }

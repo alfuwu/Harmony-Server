@@ -55,16 +55,16 @@ builder.Services.AddScoped<IRepository<User>, UserRepository>();
 builder.Services.AddScoped<IRepository<GuildServer>, ServerRepository>();
 builder.Services.AddScoped<IRepository<Channel>, ChannelRepository>();
 builder.Services.AddScoped<IRepository<ThreadChannel>, ThreadRepository>();
-builder.Services.AddScoped<IRepository<DMChannel>, DMChannelRepository>();
-builder.Services.AddScoped<IRepository<GroupDMChannel>, GroupDMChannelRepository>();
+builder.Services.AddScoped<IRepository<DmChannel>, DmChannelRepository>();
+builder.Services.AddScoped<IRepository<GroupDmChannel>, GroupDmChannelRepository>();
 builder.Services.AddScoped<IRepository<Message>, MessageRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IServerService, ServerService>();
 builder.Services.AddScoped<IChannelService, ChannelService>();
 builder.Services.AddScoped<IThreadService, ThreadService>();
-builder.Services.AddScoped<IDMChannelService, DMChannelService>();
-builder.Services.AddScoped<IGroupDMChannelService, GroupDMChannelService>();
+builder.Services.AddScoped<IDmChannelService, DmChannelService>();
+builder.Services.AddScoped<IGroupDmChannelService, GroupDmChannelService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 
 // background services
@@ -114,7 +114,8 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope()) {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated();
+    //db.Database.Migrate();
 }
 
 if (app.Environment.IsDevelopment()) {
