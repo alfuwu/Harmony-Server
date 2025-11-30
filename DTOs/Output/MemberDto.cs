@@ -2,11 +2,14 @@
 
 namespace Server.DTOs.Output;
 public class MemberDto(Member member) {
-    public long Id { get; set; } = member.UserId;
-    public User User { get; set; } = member.User;
+    public UserDto User { get; set; } = new(member.User);
     public long ServerId { get; set; } = member.ServerId;
 
     public string? Nickname { get; set; } = member.Nickname;
+    public string? Bio { get; set; } = member.Bio;
+    public string? Pronouns { get; set; } = member.Pronouns;
+    public string? Avatar { get; set; } = member.Avatar;
+    public string? NameFont { get; set; } = member.NameFont;
 
     public DateTime JoinedAt { get; set; } = member.JoinedAt;
 

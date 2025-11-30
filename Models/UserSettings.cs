@@ -8,13 +8,19 @@ public class UserSettings {
     // APPEARANCE
     public Theme Theme { get; set; } = Theme.System;
     public AppIcon AppIcon { get; set; } = AppIcon.Default;
+    public IconDisplayType AppIconDisplayType { get; set; } = IconDisplayType.Circle;
+    public IconDisplayType ServerIconDisplayType { get; set; } = IconDisplayType.Rounded;
+    public UserIconDisplayType AvatarDisplayType { get; set; } = UserIconDisplayType.UserPreference;
+    public IconDisplayType SelfAvatarDisplayType { get; set; } = IconDisplayType.Circle;
+    public NameHoverBehavior NameHoverBehavior { get; set; } = NameHoverBehavior.ShowHandle;
+    public NameFontDisplayType NameFontDisplayType { get; set; } = NameFontDisplayType.Everyone;
     public bool CompactMode { get; set; } = false;
-    public bool AlwaysAnimate { get; set; } = false; // always animate animatable stuff
     public bool ApplySaturationToRoleColors { get; set; } = false;
     public bool AlwaysUnderlineLinks { get; set; } = false;
     public RoleColor RoleColorSettings { get; set; } = RoleColor.ShowInNames;
     public bool AlwaysExpandRoles { get; set; } = false; // always expand roles when opening a user profile
     public bool ShowRoleIcons { get; set; } = true;
+    public bool ShowOwnerCrown { get; set; } = true;
     
     // ACCESSIBILITY
     public bool ReduceMotion { get; set; } = false;
@@ -24,6 +30,10 @@ public class UserSettings {
     public AnimateContext StickerAnimate { get; set; }
     public AnimateContext EmojiAnimate { get; set; }
     public AnimateContext GifAnimate { get; set; }
+    public AnimateContext ServerAnimate { get; set; }
+    public AnimateContext ChannelAnimate { get; set; }
+    public AnimateContext AvatarAnimate { get; set; }
+    public AnimateContext GlowRoleAnimate { get; set; }
     public bool DyslexiaFont { get; set; } = false;
     public bool TTS { get; set; }
     public float TTSSpeed { get; set; } = 1.0f;
@@ -57,7 +67,14 @@ public class UserSettings {
     public bool SendMessagesWithCtrlEnter { get; set; } = false;
 
     // PRIVACY & SAFETY
-
+    public FriendRequestContext WhoCanSendFriendRequests = FriendRequestContext.Everyone;
+    public UserContext WhoCanSendDms = UserContext.MutualsAndFriends;
+    public UserContext WhoCanSeeBio = UserContext.Everyone;
+    public UserContext WhoCanSeePronouns = UserContext.Everyone;
+    public UserContext WhoCanSeeAvatar = UserContext.Everyone;
+    public UserContext WhoCanSeeStatus = UserContext.Everyone;
+    // silly
+    public UserContext WhoCanSeePasswordHash = UserContext.NoOne;
 
     // DEV MODE
     public bool DeveloperMode { get; set; } = false;

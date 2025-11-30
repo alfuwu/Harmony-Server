@@ -9,7 +9,11 @@ public class Message : Identifiable {
     /// <summary>
     /// Previous versions of the message content, if edited.
     /// </summary>
-    public string[]? PreviousContent { get; set; }
+    public List<string>? PreviousContent { get; set; }
+    /// <summary>
+    /// Messages this one is replying to.
+    /// </summary>
+    public List<long>? References { get; set; }
     public DateTime Timestamp { get; set; }
     public DateTime? EditedTimestamp { get; set; } = null;
     public bool IsDeleted { get; set; }

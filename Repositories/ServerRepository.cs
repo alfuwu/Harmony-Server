@@ -21,14 +21,14 @@ public class ServerRepository(AppDbContext db) : IRepository<GuildServer> {
     public async Task<GuildServer?> GetAsync(long id) => await _db.Servers
         .Include(s => s.Members)
         .ThenInclude(m => m.User)
-        .Include(s => s.Roles)
-        .Include(s => s.Emojis)
+        //.Include(s => s.Roles)
+        //.Include(s => s.Emojis)
         .FirstAsync(s => s.Id == id);
     public async Task<IEnumerable<GuildServer>> GetAllAsync() => await _db.Servers.ToListAsync();
     public async Task<IEnumerable<GuildServer>> GetForIdAsync(long userId) =>
         await _db.Servers
-            .Include(s => s.Roles)
-            .Include(s => s.Emojis)
+            //.Include(s => s.Roles)
+            //.Include(s => s.Emojis)
             .Where(s => s.OwnerId == userId || s.Members
                 .Select(m => m.UserId)
                 .Contains(userId))

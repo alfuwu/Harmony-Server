@@ -1,8 +1,7 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum FriendRequestContext {
+public enum NameFontDisplayType {
     Everyone,
+    Friends,
     FriendsOfFriends,
-    MutualsAndFriendsOfFriends,
-    Mutuals,
     NoOne
 }

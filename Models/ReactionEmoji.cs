@@ -8,4 +8,5 @@ public class ReactionEmoji {
     /// If the reaction is a unicode emoji, this field contains the unicode character(s). Otherwise, it contains the custom emoji's name.
     /// </summary>
     public string Name { get; set; } = "";
+    public bool Animated { get; set; }
 }

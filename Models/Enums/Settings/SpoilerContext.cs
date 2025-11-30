@@ -2,5 +2,6 @@
 public enum SpoilerContext {
     Always,
     OnClick,
+    OnHover,
     OnModeratedServers
 }

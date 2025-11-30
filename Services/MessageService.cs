@@ -1,10 +1,13 @@
-﻿using Server.Data;
+﻿using Microsoft.AspNetCore.SignalR;
+using Server.Data;
 using Server.DTOs;
+using Server.Hubs;
 using Server.Models;
 using Server.Repositories;
 
 namespace Server.Services;
-public class MessageService(IRepository<Message> messages, AppDbContext db) : IMessageService {
+public class MessageService(IHubContext<GatewayHub> gateway, IRepository<Message> messages, AppDbContext db) : IMessageService {
+    private readonly IHubContext<GatewayHub> _gateway = gateway;
     private readonly IRepository<Message> _messages = messages;
     private readonly AppDbContext _db = db;
 
@@ -24,7 +27,9 @@ public class MessageService(IRepository<Message> messages, AppDbContext db) : IM
             Content = dto.Content,
             Timestamp = DateTime.UtcNow
         };
-        return await _messages.AddAsync(m);
+        await _messages.AddAsync(m);
+        await _gateway.Clients.Group($"channel:{channelId}").SendAsync("RecvMsg", m);
+        return m;
     }
 
     public async Task DeleteMessageAsync(MessageIdDto dto, long userId) {

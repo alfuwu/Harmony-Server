@@ -8,7 +8,8 @@ public class MessageDto(Message message) {
     public List<long>? Mentions { get; set; } = message.Mentions;
     public List<Reaction>? Reactions { get; set; } = message.Reactions;
     public string Content { get; set; } = message.Content;
-    public string[]? PreviousContent { get; set; } = message.PreviousContent;
+    public List<string>? PreviousContent { get; set; } = message.PreviousContent;
+    public List<long>? References { get; set; } = message.References;
     public DateTime Timestamp { get; set; } = message.Timestamp;
     public DateTime? EditedTimestamp { get; set; } = message.EditedTimestamp;
     public bool IsDeleted { get; set; } = message.IsDeleted;

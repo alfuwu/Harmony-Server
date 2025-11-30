@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTOs;
+using Server.DTOs.Input;
 using Server.DTOs.Output;
 using Server.Helpers;
+using Server.Models.Enums;
 using Server.Services;
 
 namespace Server.Controllers;
 [ApiController]
 [Route("api/servers")]
 [Authorize]
-public class ServerController(IServerService serverService, IUserService userService) : ControllerBase {
+public class ServerController(IServerService serverService, IChannelService channelService, IUserService userService) : ControllerBase {
     private readonly IServerService _serverService = serverService;
+    private readonly IChannelService _channelService = channelService;
     private readonly IUserService _userService = userService;
 
     [HttpGet]
@@ -27,7 +30,13 @@ public class ServerController(IServerService serverService, IUserService userSer
     [HttpPost]
     public async Task<IActionResult> CreateServer([FromBody] ServerCreateDto dto) {
         try {
-            return Ok(new ServerDto(await _serverService.CreateServerAsync(dto, await JwtTokenHelper.GetId(_userService, User))));
+            var s = new ServerDto(await _serverService.CreateServerAsync(dto, await JwtTokenHelper.GetId(_userService, User)));
+            await _channelService.CreateChannelAsync(new ChannelCreateDto {
+                Name = "general",
+                Description = "Automatically generated default channel",
+                Type = ChannelType.Text
+            }, s.Id, s.OwnerId);
+            return Ok(s);
         } catch (UnauthorizedAccessException e) {
             return Unauthorized(new { error = e.Message });
         } catch (Exception e) {

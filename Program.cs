@@ -50,6 +50,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // signalr
 builder.Services.AddSignalR();
 
+// cors
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowClient", policy => {
+        policy
+            .WithOrigins("http://localhost:1420") // Tauri dev server
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
 // repositories & services
 builder.Services.AddScoped<IRepository<User>, UserRepository>();
 builder.Services.AddScoped<IRepository<GuildServer>, ServerRepository>();
@@ -99,7 +110,7 @@ builder.Services.AddAuthentication(options => {
         /*OnMessageReceived = context => {
             var authToken = context.Request.Headers.Authorization.FirstOrDefault();
             var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(authToken) && path.StartsWithSegments("/chat"))
+            if (!string.IsNullOrEmpty(authToken) && path.StartsWithSegments("/ws"))
                 context.Token = authToken;
 
             return Task.CompletedTask;
@@ -126,11 +137,12 @@ if (app.Environment.IsDevelopment()) {
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseCors("AllowClient");
 
 // rate limiting middleware
 app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapControllers();
-app.MapHub<ChatHub>("/chat");
+app.MapHub<GatewayHub>("/ws");
 
 app.Run();

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.DTOs.Input;
+using Server.DTOs.Output;
 using Server.Helpers;
 using Server.Helpers.Extensions;
 using Server.Services;
@@ -17,7 +18,7 @@ public class ChannelController(IChannelService channelService, IUserService user
     [HttpGet]
     public async Task<IActionResult> GetChannels([FromRoute] long serverId) {
         try {
-            return Ok(await _channelService.GetAllChannelsAsync(serverId));
+            return Ok((await _channelService.GetAllChannelsAsync(serverId)).Select(c => new ChannelDto(c)));
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -31,7 +32,7 @@ public class ChannelController(IChannelService channelService, IUserService user
     [HttpPost]
     public async Task<IActionResult> CreateChannel([FromBody] ChannelCreateDto dto, [FromRoute] long serverId) {
         try {
-            return Ok(await _channelService.CreateChannelAsync(dto, serverId, await JwtTokenHelper.GetId(_userService, User)));
+            return Ok(new ChannelDto(await _channelService.CreateChannelAsync(dto, serverId, await JwtTokenHelper.GetId(_userService, User))));
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
