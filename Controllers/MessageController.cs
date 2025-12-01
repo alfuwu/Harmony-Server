@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Server.DTOs;
+using Server.DTOs.Input;
 using Server.DTOs.Output;
 using Server.Helpers;
 using Server.Services;
@@ -35,6 +35,7 @@ public class MessageController(IMessageService messageService, IUserService user
                 m.Content,
                 m.PreviousContent,
                 m.References,
+                m.Type,
                 m.Timestamp,
                 m.EditedTimestamp,
                 m.IsDeleted,

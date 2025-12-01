@@ -6,4 +6,7 @@ public interface IUserService {
     Task<RegistrationCompleteDto> RegisterAsync(RegisterDto dto);
     Task<string> LoginAsync(RegisterDto dto);
     Task<User?> GetByIdAsync(long id);
+    Task<User?> GetByIdWithSettingsAsync(long id);
+    Task<string?> UpdateAvatarAsync(long id, string newAvatarHash);
+    Task<string?> UpdateBannerAsync(long id, string newBannerHash);
 }

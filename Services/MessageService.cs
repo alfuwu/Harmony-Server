@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Server.Data;
-using Server.DTOs;
+using Server.DTOs.Input;
 using Server.Hubs;
 using Server.Models;
 using Server.Repositories;
@@ -27,7 +28,16 @@ public class MessageService(IHubContext<GatewayHub> gateway, IRepository<Message
             Content = dto.Content,
             Timestamp = DateTime.UtcNow
         };
-        await _messages.AddAsync(m);
+        await _messages.AddAsync(m, false);
+        if (dto.Attachments != null && dto.Attachments.Length != 0) {
+            var attachments = await db.Attachments
+                .Where(a => dto.Attachments.Contains(a.Id))
+                .ToListAsync();
+
+            foreach (var att in attachments)
+                att.MessageId = m.Id;
+        }
+        await db.SaveChangesAsync();
         await _gateway.Clients.Group($"channel:{channelId}").SendAsync("RecvMsg", m);
         return m;
     }

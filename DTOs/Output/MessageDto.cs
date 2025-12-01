@@ -1,4 +1,5 @@
 ﻿using Server.Models;
+using Server.Models.Enums;
 
 namespace Server.DTOs.Output;
 public class MessageDto(Message message) {
@@ -10,6 +11,7 @@ public class MessageDto(Message message) {
     public string Content { get; set; } = message.Content;
     public List<string>? PreviousContent { get; set; } = message.PreviousContent;
     public List<long>? References { get; set; } = message.References;
+    public MessageType Type { get; set; } = message.Type;
     public DateTime Timestamp { get; set; } = message.Timestamp;
     public DateTime? EditedTimestamp { get; set; } = message.EditedTimestamp;
     public bool IsDeleted { get; set; } = message.IsDeleted;

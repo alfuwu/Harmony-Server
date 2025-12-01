@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum AppIcon {
+public enum AppIcon : byte {
     Default,
     Classic,
     Modern,

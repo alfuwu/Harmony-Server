@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum UserIconDisplayType {
+public enum UserIconDisplayType : byte {
     Circle,
     Rounded,
     Square,

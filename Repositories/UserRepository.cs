@@ -19,6 +19,7 @@ public class UserRepository(AppDbContext db) : IRepository<User> {
             await _db.SaveChangesAsync();
     }
     public async Task<User?> GetAsync(long id) => await _db.Users.FindAsync(id);
+    public async Task<User?> GetExhaustiveAsync(long id) => await _db.Users.Include(u => u.Settings).FirstOrDefaultAsync(u => u.Id == id);
     public async Task<IEnumerable<User>> GetAllAsync() =>
         await _db.Users.ToListAsync();
     public async Task UpdateAsync(User entity, bool save = true) {

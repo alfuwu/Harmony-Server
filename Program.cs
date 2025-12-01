@@ -44,8 +44,7 @@ builder.Services.AddSwaggerGen(c => {
 
 // ef core - sql server (switch to InMemory for quick testing)
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite($"Data Source=./HarmonicDb.sqlite"));
-//    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
 // signalr
 builder.Services.AddSignalR();
@@ -71,6 +70,7 @@ builder.Services.AddScoped<IRepository<GroupDmChannel>, GroupDmChannelRepository
 builder.Services.AddScoped<IRepository<Message>, MessageRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRelationshipService, RelationshipService>();
 builder.Services.AddScoped<IServerService, ServerService>();
 builder.Services.AddScoped<IChannelService, ChannelService>();
 builder.Services.AddScoped<IThreadService, ThreadService>();
@@ -80,6 +80,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 
 // background services
 builder.Services.AddHostedService<PresenceCleanupService>();
+builder.Services.AddHostedService<AttachmentCleanupService>();
 
 // simple in-memory rate limiter config
 builder.Services.Configure<RateLimitOptions>(configuration.GetSection("RateLimiting"));
@@ -125,8 +126,46 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope()) {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureDeleted();
     db.Database.EnsureCreated();
-    //db.Database.Migrate();
+
+    if (app.Environment.IsDevelopment()) {
+        // clean upload directories
+        var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+
+        void CleanDirectory(string relativePath) {
+            var fullPath = Path.Combine(env.ContentRootPath, relativePath);
+
+            if (!Directory.Exists(fullPath))
+                return;
+
+            foreach (var file in Directory.GetFiles(fullPath))
+                try { File.Delete(file); } catch { /* swallow errors during dev */ }
+
+            foreach (var dir in Directory.GetDirectories(fullPath))
+                try { Directory.Delete(dir, recursive: true); } catch { /* swallow errors */ }
+        }
+
+        CleanDirectory("Uploads");
+        CleanDirectory("Avatars");
+        CleanDirectory("Banners");
+
+        // auto register GOD user
+        var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+        var user = await userService.RegisterAsync(new Server.DTOs.Input.RegisterDto {
+            Email = "god@heaven.gov",
+            Username = "GOD",
+            Password = "string"
+        });
+        // create a testing server
+        var serverService = scope.ServiceProvider.GetRequiredService<IServerService>();
+        await serverService.CreateServerAsync(new Server.DTOs.Input.ServerCreateDto {
+            Name = "Testing Server",
+            Description = "super cool testing server",
+            Tags = ["test"],
+            InviteUrls = ["test"]
+        }, user.Id);
+    }
 }
 
 if (app.Environment.IsDevelopment()) {

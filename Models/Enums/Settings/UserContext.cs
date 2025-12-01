@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum UserContext {
+public enum UserContext : byte {
     Everyone,
     FriendsOfFriends, // friends & friends of friends
     Friends,

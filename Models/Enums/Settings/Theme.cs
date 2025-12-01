@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum Theme {
+public enum Theme : byte {
     Light,
     Dark,
     System

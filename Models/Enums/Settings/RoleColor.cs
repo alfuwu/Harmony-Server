@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum RoleColor {
+public enum RoleColor : byte {
     ShowInNames,
     RoleDot,
     ShowAsDotAndInNames,

@@ -12,4 +12,5 @@ public class GuildServer : Identifiable {
     public List<Role> Roles { get; set; } = [];
     public List<Emoji> Emojis { get; set; } = [];
     public DateTime CreatedAt { get; set; }
+    public ServerSettings Settings { get; set; }
 }

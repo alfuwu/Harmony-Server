@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum AnimateContext {
+public enum AnimateContext : byte {
     Always,
     WhenFocused,
     OnHover,

@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum NameFontDisplayType {
+public enum NameFontDisplayType : byte {
     Everyone,
     Friends,
     FriendsOfFriends,

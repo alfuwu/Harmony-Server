@@ -14,6 +14,8 @@ public class Member {
     public string? Pronouns { get; set; } = null;
     // override avatar
     public string? Avatar { get; set; } = null;
+    // override banner
+    public string? Banner { get; set; } = null;
     // override font
     public string? NameFont { get; set; } = null;
 

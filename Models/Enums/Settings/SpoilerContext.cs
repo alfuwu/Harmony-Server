@@ -1,5 +1,5 @@
 ﻿namespace Server.Models.Enums.Settings;
-public enum SpoilerContext {
+public enum SpoilerContext : byte {
     Always,
     OnClick,
     OnHover,

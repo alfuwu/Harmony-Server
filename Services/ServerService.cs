@@ -1,5 +1,5 @@
 ﻿using Server.Data;
-using Server.DTOs;
+using Server.DTOs.Input;
 using Server.Models;
 using Server.Repositories;
 

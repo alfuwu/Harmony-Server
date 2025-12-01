@@ -3,7 +3,7 @@
 namespace Server.Models;
 public class UserSettings {
     public long UserId { get; set; }
-    public User User { get; set; } = null!;
+    public User? User { get; set; } = null;
 
     // APPEARANCE
     public Theme Theme { get; set; } = Theme.System;
@@ -56,6 +56,7 @@ public class UserSettings {
     public bool ShowVideosUploadedToHarmony { get; set; } = true;
     public bool HideLinkWhenPreviewing { get; set; } = true;
     public bool ShowWebEmbeds { get; set; } = true;
+    public bool ShowReactions { get; set; } = true;
     public bool ShowReactionCount { get; set; } = true;
     public bool ShowUsersWhoReacted { get; set; } = true;
     public bool ConvertEmoticonsToEmoji { get; set; } = false;
@@ -67,14 +68,6 @@ public class UserSettings {
     public bool SendMessagesWithCtrlEnter { get; set; } = false;
 
     // PRIVACY & SAFETY
-    public FriendRequestContext WhoCanSendFriendRequests = FriendRequestContext.Everyone;
-    public UserContext WhoCanSendDms = UserContext.MutualsAndFriends;
-    public UserContext WhoCanSeeBio = UserContext.Everyone;
-    public UserContext WhoCanSeePronouns = UserContext.Everyone;
-    public UserContext WhoCanSeeAvatar = UserContext.Everyone;
-    public UserContext WhoCanSeeStatus = UserContext.Everyone;
-    // silly
-    public UserContext WhoCanSeePasswordHash = UserContext.NoOne;
 
     // DEV MODE
     public bool DeveloperMode { get; set; } = false;

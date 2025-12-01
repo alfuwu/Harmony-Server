@@ -1,4 +1,6 @@
-﻿namespace Server.Models;
+﻿using Server.Models.Enums;
+
+namespace Server.Models;
 public class Message : Identifiable {
     public long ChannelId { get; set; }
     public AbstractChannel Channel { get; set; } = null!;
@@ -14,6 +16,8 @@ public class Message : Identifiable {
     /// Messages this one is replying to.
     /// </summary>
     public List<long>? References { get; set; }
+    public MessageType Type { get; set; }
+    public List<Attachment>? Attachments { get; set; }
     public DateTime Timestamp { get; set; }
     public DateTime? EditedTimestamp { get; set; } = null;
     public bool IsDeleted { get; set; }
