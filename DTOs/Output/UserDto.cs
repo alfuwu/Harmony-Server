@@ -11,10 +11,12 @@ public class UserDto(User user) {
     public string Username { get; set; } = user.Username;
     public string? PasswordHash { get; set; } = user.PasswordHash;
     public string? Status { get; set; } = user.Status;
+    public OnlineStatus OnlineStatus { get; set; } = user.OnlineStatus;
     public string? Bio { get; set; } = user.Bio;
     public string? Pronouns { get; set; } = user.Pronouns;
     public string? Avatar { get; set; } = user.Avatar;
     public string? Banner { get; set; } = user.Banner;
+    public int BannerColor { get; set; } = user.BannerColor;
     public string? NameFont { get; set; } = user.NameFont;
     public DateTime JoinedAt { get; set; } = user.JoinedAt;
     public DateTime LastSeen { get; set; } = user.LastSeen;
@@ -33,8 +35,10 @@ public class UserDto(User user) {
             Pronouns = null;
         if (!relationships.CanSee(relationship, self.WhoCanSeeAvatar))
             Avatar = null;
-        if (!relationships.CanSee(relationship, self.WhoCanSeeBanner))
+        if (!relationships.CanSee(relationship, self.WhoCanSeeBanner)) {
             Banner = null;
+            BannerColor = 0;
+        }
         if (!relationships.CanSee(relationship, self.WhoCanSeeStatus))
             Status = null;
         if (!relationships.CanSee(relationship, self.WhoCanSeePasswordHash))

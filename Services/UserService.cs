@@ -1,4 +1,5 @@
 ﻿using System.Net.Mail;
+using Humanizer;
 using Server.Data;
 using Server.DTOs.Input;
 using Server.Helpers;
@@ -13,6 +14,8 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
     private readonly IConfiguration _configuration = configuration;
     private readonly AppDbContext _db = db;
 
+    public async Task<bool> IsUsernameAvailable(string username) => !(await _users.FindAsync(u => u.Username == username)).Any();
+
     public async Task<RegistrationCompleteDto> RegisterAsync(RegisterDto dto) {
         if (string.IsNullOrWhiteSpace(dto.Username))
             throw new ArgumentException("Username must be provided");
@@ -22,7 +25,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
             throw new ArgumentException("Username contains invalid characters");
         dto.Username = dto.Username.Trim();//.ToLowerInvariant();
 
-        var exists = (await _users.FindAsync(u => u.Username == dto.Username)).Any();
+        var exists = !await IsUsernameAvailable(dto.Username);
         if (exists)
             throw new ArgumentException("Username already exists");
 
@@ -99,5 +102,10 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
         await _users.UpdateAsync(user);
 
         return oldAvatar;
+    }
+
+    public async Task UpdateSettingsAsync(UserSettings newSettings) {
+        _db.UserSettings.Update(newSettings);
+        await _db.SaveChangesAsync();
     }
 }

@@ -11,10 +11,12 @@ public class User : Identifiable {
     public string Username { get; set; } = "";
     public string PasswordHash { get; set; } = "";
     public string? Status { get; set; }
+    public OnlineStatus OnlineStatus { get; set; }
     public string? Bio { get; set; }
     public string? Pronouns { get; set; }
     public string? Avatar { get; set; }
     public string? Banner { get; set; }
+    public int BannerColor { get; set; }
     public string? NameFont { get; set; }
     public DateTime JoinedAt { get; set; }
     public DateTime LastSeen { get; set; }

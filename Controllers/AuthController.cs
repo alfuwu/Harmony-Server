@@ -25,4 +25,15 @@ public class AuthController(IUserService userService) : ControllerBase {
             return BadRequest(new { error = e.Message });
         }
     }
+
+    [HttpGet("username")]
+    public async Task<IActionResult> CheckUsernameAvailability([FromQuery] string username) {
+        try {
+            if (await _userService.IsUsernameAvailable(username))
+                return Ok();
+            return Conflict();
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
 }

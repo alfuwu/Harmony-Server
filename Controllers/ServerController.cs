@@ -62,11 +62,11 @@ public class ServerController(IServerService serverService, IChannelService chan
     public async Task<IActionResult> GetMembers([FromRoute] long serverId, [FromQuery] int page = 0, [FromQuery] int pageSize = 50) {
         try {
             long requestorId = await JwtTokenHelper.GetId(_userService, User);
-            return Ok((await _serverService.GetMembersAsync(serverId, requestorId, page, pageSize)).Select(async m => {
+            return Ok(await Task.WhenAll((await _serverService.GetMembersAsync(serverId, requestorId, page, pageSize)).Select(async m => {
                 var dto = new MemberDto(m);
                 await dto.Redact(_relationshipService, m.User, requestorId);
                 return dto;
-            }));
+            })));
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {

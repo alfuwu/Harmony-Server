@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.DTOs.Output;
 using Server.Helpers;
+using Server.Models;
 using Server.Services;
 using static System.IO.File;
 
@@ -10,8 +11,6 @@ namespace Server.Controllers;
 [Route("api/users")]
 [Authorize]
 public class UserController : ControllerBase {
-    private static readonly string[] ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
-
     private readonly string avatarPath;
     private readonly string bannerPath;
     private readonly IUserService _userService;
@@ -84,6 +83,29 @@ public class UserController : ControllerBase {
         }
     }
 
+    [HttpPatch("@me/settings")]
+    public async Task<IActionResult> UpdateSettings([FromBody] UserSettings settings) {
+        try {
+            var userId = await JwtTokenHelper.GetId(_userService, User);
+            var user = await _userService.GetByIdAsync(userId);
+
+            if (user == null)
+                return NotFound(new { error = "User not found" });
+
+            settings.UserId = userId;
+            settings.User = user;
+
+            await _userService.UpdateSettingsAsync(settings);
+            return Ok();
+        } catch (KeyNotFoundException e) {
+            return NotFound(new { error = e.Message });
+        } catch (UnauthorizedAccessException e) {
+            return Unauthorized(new { error = e.Message });
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
     [HttpPost("@me/avatar")]
     [RequestSizeLimit(5 * 1024 * 1024)] // 5mb size limit
     public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file) {
@@ -92,20 +114,9 @@ public class UserController : ControllerBase {
                 return BadRequest(new { error = "No file uploaded" });
 
             var userId = await JwtTokenHelper.GetId(_userService, User);
-
-            if (!ALLOWED_IMAGE_TYPES.Contains(file.ContentType))
-                return BadRequest(new { error = "Unsupported file type" });
-
             var avatarId = Guid.NewGuid().ToString("N");
-
-            var ext = Path.GetExtension(file.FileName);
-            if (string.IsNullOrWhiteSpace(ext))
-                ext = ".png"; // default fallback
-
-            var filePath = Path.Combine(avatarPath, avatarId + ext);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-                await file.CopyToAsync(stream);
+            var path = Path.Combine(avatarPath, avatarId);
+            await FileHelper.UploadImage(file, path);
 
             var oldAvatar = await _userService.UpdateAvatarAsync(userId, avatarId);
 
@@ -134,20 +145,9 @@ public class UserController : ControllerBase {
                 return BadRequest(new { error = "No file uploaded" });
 
             var userId = await JwtTokenHelper.GetId(_userService, User);
-
-            if (!ALLOWED_IMAGE_TYPES.Contains(file.ContentType))
-                return BadRequest(new { error = "Unsupported file type" });
-
             var bannerId = Guid.NewGuid().ToString("N");
-
-            var ext = Path.GetExtension(file.FileName);
-            if (string.IsNullOrWhiteSpace(ext))
-                ext = ".png"; // default fallback
-
-            var filePath = Path.Combine(bannerPath, bannerId + ext);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-                await file.CopyToAsync(stream);
+            var path = Path.Combine(bannerPath, bannerId);
+            await FileHelper.UploadImage(file, path);
 
             var oldBanner = await _userService.UpdateBannerAsync(userId, bannerId);
 

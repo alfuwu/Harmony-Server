@@ -93,7 +93,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             entity.ToTable(tb => tb.HasCheckConstraint(
                 "CK_UserRelationship_UserIdOrder",
-                "[First] < [Second]"
+                "\"First\" < \"Second\""
             ));
 
             // enum stored as byte
