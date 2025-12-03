@@ -9,4 +9,6 @@ public interface IServerService {
     Task<IEnumerable<GuildServer>> GetServersAsync(long userId);
     Task<GuildServer?> GetServerFromInviteUrlAsync(string inviteUrl);
     Task<IEnumerable<Member>> GetMembersAsync(long serverId, long userId, int page, int pageSize);
+    Task<Member?> GetMemberAsync(long serverId, long userId);
+    Task UpdateMemberAsync(Member member);
 }

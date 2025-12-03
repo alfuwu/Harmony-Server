@@ -81,4 +81,11 @@ public class ServerService(IRepository<GuildServer> servers, IRepository<Channel
             .Skip(page * pageSize)
             .Take(pageSize);
     }
+
+    public async Task<Member?> GetMemberAsync(long serverId, long userId) => await _db.Members.FindAsync(userId, serverId);
+
+    public async Task UpdateMemberAsync(Member member) {
+        _db.Members.Update(member);
+        await _db.SaveChangesAsync();
+    }
 }

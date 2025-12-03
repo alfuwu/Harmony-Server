@@ -91,10 +91,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(e => e.First).IsRequired();
             entity.Property(e => e.Second).IsRequired();
 
-            entity.ToTable(tb => tb.HasCheckConstraint(
-                "CK_UserRelationship_UserIdOrder",
-                "\"First\" < \"Second\""
-            ));
+            entity.ToTable("Relationships");
 
             // enum stored as byte
             entity.Property(e => e.Relationship).HasConversion<byte>().IsRequired();
