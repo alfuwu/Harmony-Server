@@ -21,6 +21,7 @@ public class UserSettings {
     public bool AlwaysExpandRoles { get; set; } = false; // always expand roles when opening a user profile
     public bool ShowRoleIcons { get; set; } = true;
     public bool ShowOwnerCrown { get; set; } = true;
+    public EmojiStyle EmojiStyle { get; set; } = EmojiStyle.Twemoji;
     
     // ACCESSIBILITY
     public bool ReduceMotion { get; set; } = false;

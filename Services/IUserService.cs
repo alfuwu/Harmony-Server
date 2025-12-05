@@ -9,7 +9,7 @@ public interface IUserService {
     Task<User?> GetByIdAsync(long id);
     Task<User?> GetByIdWithSettingsAsync(long id);
     Task UpdateAsync(User user);
-    Task<string?> UpdateAvatarAsync(long id, string newAvatarHash);
-    Task<string?> UpdateBannerAsync(long id, string newBannerHash);
+    Task<string?> UpdateAvatarAsync(long id, string? newAvatarHash);
+    Task<string?> UpdateBannerAsync(long id, string? newBannerHash);
     Task UpdateSettingsAsync(UserSettings settings);
 }

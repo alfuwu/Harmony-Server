@@ -109,7 +109,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
         await _users.UpdateAsync(user);
     }
 
-    public async Task<string?> UpdateAvatarAsync(long userId, string newAvatarHash) {
+    public async Task<string?> UpdateAvatarAsync(long userId, string? newAvatarHash) {
         var user = await GetByIdAsync(userId) ?? throw new KeyNotFoundException("User does not exist");
         var oldAvatar = user.Avatar;
 
@@ -119,7 +119,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
         return oldAvatar;
     }
 
-    public async Task<string?> UpdateBannerAsync(long userId, string newBannerHash) {
+    public async Task<string?> UpdateBannerAsync(long userId, string? newBannerHash) {
         var user = await GetByIdAsync(userId) ?? throw new KeyNotFoundException("User does not exist");
         var oldAvatar = user.Banner;
 

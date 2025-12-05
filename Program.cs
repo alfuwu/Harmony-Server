@@ -140,15 +140,17 @@ using (var scope = app.Services.CreateScope()) {
                 return;
 
             foreach (var file in Directory.GetFiles(fullPath))
-                try { File.Delete(file); } catch { /* swallow errors during dev */ }
+                try { File.Delete(file); } catch { }
 
             foreach (var dir in Directory.GetDirectories(fullPath))
-                try { Directory.Delete(dir, recursive: true); } catch { /* swallow errors */ }
+                try { Directory.Delete(dir, recursive: true); } catch { }
         }
 
         CleanDirectory("Uploads");
         CleanDirectory("Avatars");
         CleanDirectory("Banners");
+        CleanDirectory("Fonts");
+        CleanDirectory("Emojis");
 
         // auto register GOD user
         var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
@@ -159,12 +161,18 @@ using (var scope = app.Services.CreateScope()) {
         });
         // create a testing server
         var serverService = scope.ServiceProvider.GetRequiredService<IServerService>();
-        await serverService.CreateServerAsync(new Server.DTOs.Input.ServerCreateDto {
+        var server = await serverService.CreateServerAsync(new Server.DTOs.Input.ServerCreateDto {
             Name = "Testing Server",
             Description = "super cool testing server",
             Tags = ["test"],
             InviteUrls = ["test"]
         }, user.Id);
+        var channelService = scope.ServiceProvider.GetRequiredService<IChannelService>();
+        await channelService.CreateChannelAsync(new Server.DTOs.Input.ChannelCreateDto {
+            Name = "general",
+            Description = "lalala test description",
+            Type = Server.Models.Enums.ChannelType.Text
+        }, server.Id, user.Id);
     }
 }
 

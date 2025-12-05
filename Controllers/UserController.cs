@@ -100,7 +100,7 @@ public class UserController : ControllerBase {
             settings.User = user;
 
             await _userService.UpdateSettingsAsync(settings);
-            return Ok();
+            return NoContent();
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -127,7 +127,7 @@ public class UserController : ControllerBase {
             //member.NameFont = update.NameFont ?? member.NameFont;
 
             await _serverService.UpdateMemberAsync(member);
-            return Ok();
+            return NoContent();
         } catch (Exception e) {
             return BadRequest(new { error = e.Message });
         }
@@ -148,7 +148,7 @@ public class UserController : ControllerBase {
             user.Bio = update.Bio ?? user.Bio;
 
             await _userService.UpdateAsync(user);
-            return Ok();
+            return NoContent();
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -199,26 +199,24 @@ public class UserController : ControllerBase {
     }
 
     private static string FormatImagePath(long id, string uuid) => $"{id}_{uuid}";
-    private static string FormatImagePath(long id, Guid uuid) => $"{id}_{uuid:N}";
 
     [HttpPost("@me/avatar")]
     [RequestSizeLimit(5 * 1024 * 1024)] // 5mb size limit
-    public async Task<IActionResult> UploadAvatar([FromForm] FileDto dto) {
+    public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file) {
         try {
-            var file = dto.File;
             if (file == null || file.Length == 0)
                 return BadRequest(new { error = "No file uploaded" });
 
             var userId = await JwtTokenHelper.GetId(_userService, User);
-            var avatarId = FormatImagePath(userId, Guid.NewGuid());
-            var path = Path.Combine(avatarPath, avatarId);
+            var avatarId = Guid.NewGuid().ToString("N");
+            var path = Path.Combine(avatarPath, FormatImagePath(userId, avatarId));
             await FileHelper.UploadImage(file, path);
 
             var oldAvatar = await _userService.UpdateAvatarAsync(userId, avatarId);
 
             // delete old avatar file
             if (!string.IsNullOrWhiteSpace(oldAvatar)) {
-                var oldPattern = Directory.GetFiles(avatarPath, oldAvatar + ".*");
+                var oldPattern = Directory.GetFiles(avatarPath, FormatImagePath(userId, oldAvatar) + ".*");
                 foreach (var oldFile in oldPattern)
                     Delete(oldFile);
             }
@@ -242,19 +240,64 @@ public class UserController : ControllerBase {
                 return BadRequest(new { error = "No file uploaded" });
 
             var userId = await JwtTokenHelper.GetId(_userService, User);
-            var bannerId = FormatImagePath(userId, Guid.NewGuid());
-            var path = Path.Combine(bannerPath, bannerId);
+            var bannerId = Guid.NewGuid().ToString("N");
+            var path = Path.Combine(bannerPath, FormatImagePath(userId, bannerId));
             await FileHelper.UploadImage(file, path);
 
             var oldBanner = await _userService.UpdateBannerAsync(userId, bannerId);
 
             if (!string.IsNullOrWhiteSpace(oldBanner)) {
-                var oldPattern = Directory.GetFiles(bannerPath, oldBanner + ".*");
+                var oldPattern = Directory.GetFiles(bannerPath, FormatImagePath(userId, oldBanner) + ".*");
                 foreach (var oldFile in oldPattern)
                     Delete(oldFile);
             }
 
             return Ok(new { banner = bannerId });
+        } catch (KeyNotFoundException e) {
+            return NotFound(new { error = e.Message });
+        } catch (UnauthorizedAccessException e) {
+            return Unauthorized(new { error = e.Message });
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
+    [HttpDelete("@me/avatar")]
+    public async Task<IActionResult> UploadAvatar() {
+        try {
+            var userId = await JwtTokenHelper.GetId(_userService, User);
+            var oldAvatar = await _userService.UpdateAvatarAsync(userId, null);
+
+            // delete old avatar file
+            if (!string.IsNullOrWhiteSpace(oldAvatar)) {
+                var oldPattern = Directory.GetFiles(avatarPath, FormatImagePath(userId, oldAvatar) + ".*");
+                foreach (var oldFile in oldPattern)
+                    Delete(oldFile);
+            }
+
+            return Ok(new { avatar = (string?)null });
+        } catch (KeyNotFoundException e) {
+            return NotFound(new { error = e.Message });
+        } catch (UnauthorizedAccessException e) {
+            return Unauthorized(new { error = e.Message });
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
+    [HttpDelete("@me/banner")]
+    public async Task<IActionResult> DeleteBanner() {
+        try {
+            var userId = await JwtTokenHelper.GetId(_userService, User);
+            var oldBanner = await _userService.UpdateBannerAsync(userId, null);
+
+            if (!string.IsNullOrWhiteSpace(oldBanner)) {
+                var oldPattern = Directory.GetFiles(bannerPath, FormatImagePath(userId, oldBanner) + ".*");
+                foreach (var oldFile in oldPattern)
+                    Delete(oldFile);
+            }
+
+            return Ok(new { banner = (string?)null });
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -319,7 +362,7 @@ public class UserController : ControllerBase {
                 return NotFound(new { error = "Target not found" });
 
             await _relationshipService.SendFriendRequest(id, targetId, target.WhoCanSendFriendRequests);
-            return Ok();
+            return NoContent();
         } catch (UnauthorizedAccessException e) {
             return Unauthorized(new { error = e.Message });
         } catch (Exception e) {
@@ -333,7 +376,7 @@ public class UserController : ControllerBase {
             var id = await JwtTokenHelper.GetId(_userService, User);
 
             await _relationshipService.AcceptFriendRequest(sourceId, id);
-            return Ok();
+            return NoContent();
         } catch (UnauthorizedAccessException e) {
             return Unauthorized(new { error = e.Message });
         } catch (Exception e) {
