@@ -15,6 +15,7 @@ namespace Server.Controllers;
 public class UserController : ControllerBase {
     private readonly string avatarPath;
     private readonly string bannerPath;
+    private readonly string fontPath;
     private readonly IUserService _userService;
     private readonly IServerService _serverService;
     private readonly IRelationshipService _relationshipService;
@@ -22,8 +23,10 @@ public class UserController : ControllerBase {
     public UserController(IWebHostEnvironment env, IUserService userService, IServerService serverService, IRelationshipService relationshipService) {
         avatarPath = Path.Combine(env.ContentRootPath, "Avatars");
         bannerPath = Path.Combine(env.ContentRootPath, "Banners");
+        fontPath = Path.Combine(env.ContentRootPath, "Fonts");
         Directory.CreateDirectory(avatarPath);
         Directory.CreateDirectory(bannerPath);
+        Directory.CreateDirectory(fontPath);
         _userService = userService;
         _serverService = serverService;
         _relationshipService = relationshipService;
@@ -262,8 +265,38 @@ public class UserController : ControllerBase {
         }
     }
 
+    [HttpPost("@me/font")]
+    [RequestSizeLimit(1 * 1024 * 1024)] // 1mb size limit
+    public async Task<IActionResult> UploadFont([FromForm] IFormFile file) {
+        try {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "No file uploaded" });
+
+            var userId = await JwtTokenHelper.GetId(_userService, User);
+            var fontId = Guid.NewGuid().ToString("N");
+            var path = Path.Combine(fontPath, FormatImagePath(userId, fontId));
+            await FileHelper.UploadFont(file, path);
+
+            var oldFont = await _userService.UpdateFontAsync(userId, fontId);
+
+            if (!string.IsNullOrWhiteSpace(oldFont)) {
+                var oldPattern = Directory.GetFiles(fontPath, FormatImagePath(userId, oldFont) + ".*");
+                foreach (var oldFile in oldPattern)
+                    Delete(oldFile);
+            }
+
+            return Ok(new { nameFont = fontId });
+        } catch (KeyNotFoundException e) {
+            return NotFound(new { error = e.Message });
+        } catch (UnauthorizedAccessException e) {
+            return Unauthorized(new { error = e.Message });
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
     [HttpDelete("@me/avatar")]
-    public async Task<IActionResult> UploadAvatar() {
+    public async Task<IActionResult> DeleteAvatar() {
         try {
             var userId = await JwtTokenHelper.GetId(_userService, User);
             var oldAvatar = await _userService.UpdateAvatarAsync(userId, null);
@@ -298,6 +331,28 @@ public class UserController : ControllerBase {
             }
 
             return Ok(new { banner = (string?)null });
+        } catch (KeyNotFoundException e) {
+            return NotFound(new { error = e.Message });
+        } catch (UnauthorizedAccessException e) {
+            return Unauthorized(new { error = e.Message });
+        } catch (Exception e) {
+            return BadRequest(new { error = e.Message });
+        }
+    }
+
+    [HttpDelete("@me/font")]
+    public async Task<IActionResult> DeleteFont() {
+        try {
+            var userId = await JwtTokenHelper.GetId(_userService, User);
+            var oldFont = await _userService.UpdateFontAsync(userId, null);
+
+            if (!string.IsNullOrWhiteSpace(oldFont)) {
+                var oldPattern = Directory.GetFiles(fontPath, FormatImagePath(userId, oldFont) + ".*");
+                foreach (var oldFile in oldPattern)
+                    Delete(oldFile);
+            }
+
+            return Ok(new { nameFont = (string?)null });
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -345,6 +400,30 @@ public class UserController : ControllerBase {
             ext == ".jpg" || ext == ".jpeg" ? "image/jpeg" :
             ext == ".webp" ? "image/webp" :
             ext == ".gif" ? "image/gif" :
+            "application/octet-stream";
+
+        var bytes = await ReadAllBytesAsync(filePath);
+        return File(bytes, contentType);
+    }
+
+    [AllowAnonymous]
+    [HttpGet("{userId}/font/{font}")]
+    public async Task<IActionResult> GetFont([FromRoute] long userId, [FromRoute] string font) {
+        var pattern = Directory.GetFiles(fontPath, FormatImagePath(userId, font) + ".*");
+
+        if (pattern.Length == 0)
+            return NotFound();
+
+        var filePath = pattern[0];
+        var ext = Path.GetExtension(filePath).ToLowerInvariant();
+
+        var contentType =
+            ext == ".ttf" ? "font/ttf" :
+            ext == ".otf" ? "font/otf" :
+            ext == ".woff" ? "font/woff" :
+            ext == ".woff2" ? "font/woff2" :
+            ext == ".sfnt" ? "font/sfnt" :
+            ext == ".eot" ? "application/vnd.ms-fontobject" :
             "application/octet-stream";
 
         var bytes = await ReadAllBytesAsync(filePath);

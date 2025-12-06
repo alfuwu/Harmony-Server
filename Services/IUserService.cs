@@ -11,5 +11,6 @@ public interface IUserService {
     Task UpdateAsync(User user);
     Task<string?> UpdateAvatarAsync(long id, string? newAvatarHash);
     Task<string?> UpdateBannerAsync(long id, string? newBannerHash);
+    Task<string?> UpdateFontAsync(long id, string? newFontHash);
     Task UpdateSettingsAsync(UserSettings settings);
 }

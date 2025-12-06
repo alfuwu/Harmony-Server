@@ -5,7 +5,9 @@ public class Message : Identifiable {
     public long ChannelId { get; set; }
     public AbstractChannel Channel { get; set; } = null!;
     public long AuthorId { get; set; }
+    public bool? MentionsEveryone { get; set; }
     public List<long>? Mentions { get; set; }
+    public List<long>? MentionRoles { get; set; }
     public List<Reaction>? Reactions { get; set; }
     public string Content { get; set; } = "";
     /// <summary>

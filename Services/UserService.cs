@@ -121,12 +121,22 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
 
     public async Task<string?> UpdateBannerAsync(long userId, string? newBannerHash) {
         var user = await GetByIdAsync(userId) ?? throw new KeyNotFoundException("User does not exist");
-        var oldAvatar = user.Banner;
+        var oldBanner = user.Banner;
 
         user.Banner = newBannerHash;
         await _users.UpdateAsync(user);
 
-        return oldAvatar;
+        return oldBanner;
+    }
+
+    public async Task<string?> UpdateFontAsync(long userId, string? newFontHash) {
+        var user = await GetByIdAsync(userId) ?? throw new KeyNotFoundException("User does not exist");
+        var oldFont = user.NameFont;
+
+        user.NameFont = newFontHash;
+        await _users.UpdateAsync(user);
+
+        return oldFont;
     }
 
     public async Task UpdateSettingsAsync(UserSettings newSettings) {
