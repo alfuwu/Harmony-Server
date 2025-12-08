@@ -23,8 +23,10 @@ public class UserDto(User user) {
     public bool IsDeleted { get; set; } = user.IsDeleted;
     public ulong Flags { get; set; } = user.Flags;
 
-    public async Task<Relationship> Redact(IRelationshipService relationships, User self, long? requestor) {
-        var relationship = requestor.HasValue ? await relationships.GetUserContext(Id, requestor.Value) : Relationship.Everyone;
+    public async Task<Relationship> Redact(IRelationshipService relationships, User self, long? requestor) =>
+        Redact(relationships, self, requestor.HasValue ? await relationships.GetUserContext(Id, requestor.Value) : Relationship.Everyone);
+
+    public Relationship Redact(IRelationshipService relationships, User self, Relationship relationship) {
         if (!relationships.CanSee(relationship, self.WhoCanSeeEmail))
             Email = null;
         if (!relationships.CanSee(relationship, self.WhoCanSeePhoneNumber))

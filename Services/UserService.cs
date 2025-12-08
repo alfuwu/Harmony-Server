@@ -1,20 +1,23 @@
 ﻿using System.Net.Mail;
 using Humanizer;
 using Microsoft.AspNetCore.SignalR;
+using NuGet.Packaging;
 using Server.Data;
 using Server.DTOs.Input;
 using Server.DTOs.Output;
 using Server.Helpers;
 using Server.Hubs;
 using Server.Models;
+using Server.Models.Enums;
 using Server.Repositories;
 
 using static BCrypt.Net.BCrypt;
 
 namespace Server.Services;
-public class UserService(IHubContext<GatewayHub> gateway, IRepository<User> users, IRelationshipService relationshipService, IConfiguration configuration, AppDbContext db) : IUserService {
+public class UserService(IHubContext<GatewayHub> gateway, IRepository<User> users, IServerService serverService, IRelationshipService relationshipService, IConfiguration configuration, AppDbContext db) : IUserService {
     private readonly IHubContext<GatewayHub> _gateway = gateway;
     private readonly IRepository<User> _users = users;
+    private readonly IServerService _serverService = serverService;
     private readonly IRelationshipService _relationshipService = relationshipService;
     private readonly IConfiguration _configuration = configuration;
     private readonly AppDbContext _db = db;
@@ -153,16 +156,18 @@ public class UserService(IHubContext<GatewayHub> gateway, IRepository<User> user
         await _db.SaveChangesAsync();
     }
 
+    // this is NOT perfect, but it's better than nothing
+    // namely, it lacks fine-grained control over the redaction (doesn't detect which friends are also in mutual servers, etc.)
     public async Task BroadcastChanges(User user) {
-        Console.WriteLine("broadcasting change for user: " + user.Id);
-        var watchers = UserWatchRegistry.GetWatchers(user.Id);
-        Console.WriteLine("watchers: " + watchers);
+        var friends = await _relationshipService.GetFriends(user.Id);
 
-        foreach (var watcherId in watchers) {
-            var dto = new UserDto(user);
-            await dto.Redact(_relationshipService, user, watcherId);
+        var friendDto = new UserDto(user);
+        friendDto.Redact(_relationshipService, user, Relationship.Friend);
+        await _gateway.Clients.Users(friends.Select(f => f.ToString())).SendAsync("UpdUsr", friendDto);
 
-            await _gateway.Clients.User(watcherId.ToString()).SendAsync("UpdUsr", dto);
-        }
+        var mutualDto = new UserDto(user);
+        mutualDto.Redact(_relationshipService, user, Relationship.Mutual);
+        var servers = await _serverService.GetServersAsync(user.Id);
+        await _gateway.Clients.Groups(servers.Select(s => $"server:{s.Id}")).SendAsync("UpdUsr", mutualDto);
     }
 }

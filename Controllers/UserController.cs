@@ -36,9 +36,7 @@ public class UserController : ControllerBase {
     [HttpGet("@me")]
     public async Task<IActionResult> GetMe() {
         try {
-            long userId = await JwtTokenHelper.GetId(_userService, User);
-            UserWatchRegistry.AddWatcher(userId, userId);
-            return Ok(await _userService.GetByIdAsync(userId));
+            return Ok(await _userService.GetByIdAsync(await JwtTokenHelper.GetId(_userService, User)));
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -59,10 +57,6 @@ public class UserController : ControllerBase {
             var user = await _userService.GetByIdAsync(userId) ?? throw new KeyNotFoundException("User not found");
             var dto = new UserDto(user);
             await dto.Redact(_relationshipService, user, requestorId);
-            if (requestorId.HasValue) {
-                UserWatchRegistry.AddWatcher(userId, requestorId.Value);
-                Console.WriteLine("added watcher");
-            }
             return Ok(dto);
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
