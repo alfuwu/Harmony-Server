@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -78,6 +79,8 @@ builder.Services.AddScoped<IDmChannelService, DmChannelService>();
 builder.Services.AddScoped<IGroupDmChannelService, GroupDmChannelService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 
+builder.Services.AddSingleton<IUserIdProvider, DbUserIdProvider>();
+
 // background services
 builder.Services.AddHostedService<PresenceCleanupService>();
 builder.Services.AddHostedService<AttachmentCleanupService>();
@@ -105,17 +108,6 @@ builder.Services.AddAuthentication(options => {
         IssuerSigningKey = signingKey,
         ValidIssuer = jwtSection.GetValue<string>("Issuer"),
         ValidAudience = jwtSection.GetValue<string>("Audience")
-    };
-
-    options.Events = new JwtBearerEvents {
-        /*OnMessageReceived = context => {
-            var authToken = context.Request.Headers.Authorization.FirstOrDefault();
-            var path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(authToken) && path.StartsWithSegments("/ws"))
-                context.Token = authToken;
-
-            return Task.CompletedTask;
-        }*/
     };
 });
 
@@ -173,6 +165,12 @@ using (var scope = app.Services.CreateScope()) {
             Description = "lalala test description",
             Type = Server.Models.Enums.ChannelType.Text
         }, server.Id, user.Id);
+        var alfred = await userService.RegisterAsync(new Server.DTOs.Input.RegisterDto {
+            Email = "alfred@heaven.gov",
+            Username = "alfred",
+            Password = "string"
+        });
+        await serverService.JoinServerAsync(server.Id, alfred.Id);
     }
 }
 
@@ -182,14 +180,14 @@ if (app.Environment.IsDevelopment()) {
 }
 
 app.UseRouting();
+app.UseCors("AllowClient");
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseCors("AllowClient");
 
 // rate limiting middleware
 app.UseMiddleware<RateLimitMiddleware>();
 
 app.MapControllers();
-app.MapHub<GatewayHub>("/ws");
+app.MapHub<GatewayHub>("/gateway");
 
 app.Run();

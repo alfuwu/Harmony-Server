@@ -26,22 +26,7 @@ public class MessageController(IMessageService messageService, IUserService user
     public async Task<IActionResult> SendMessage([FromBody] MessageCreateDto dto, [FromRoute] long channelId) {
         try {
             var m = await _messageService.SendMessageAsync(dto, channelId, await JwtTokenHelper.GetId(_userService, User));
-            return Ok(new {
-                m.Id,
-                m.ChannelId,
-                m.AuthorId,
-                m.Mentions,
-                m.Reactions,
-                m.Content,
-                m.PreviousContent,
-                m.References,
-                m.Type,
-                m.Timestamp,
-                m.EditedTimestamp,
-                m.IsDeleted,
-                m.IsPinned,
-                dto.Nonce // we need to send the nonce back so that the client knows what message to replace
-            });
+            return Ok(new MessageWithNonceDto(m, dto.Nonce)); // we need to send the nonce back so that the client knows what message to replace
         } catch (Exception e) {
             return BadRequest(new { error = e.Message });
         }

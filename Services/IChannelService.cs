@@ -6,4 +6,5 @@ public interface IChannelService {
     Task<Channel> CreateChannelAsync(ChannelCreateDto dto, long serverId, long userId);
     Task DeleteChannelAsync(long id, long userId);
     Task<IEnumerable<Channel>> GetAllChannelsAsync(long serverId);
+    Task<Channel> GetServerChannelAsync(AbstractChannel chan);
 }

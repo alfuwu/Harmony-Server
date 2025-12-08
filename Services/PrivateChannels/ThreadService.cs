@@ -8,14 +8,6 @@ public class ThreadService(IRepository<Channel> channels, IRepository<ThreadChan
     private readonly IRepository<Channel> _channels = channels;
     private readonly IRepository<ThreadChannel> _threads = threads;
     private readonly IRepository<GuildServer> _servers = servers;
-    public static readonly ChannelType[] ThreadSafeChannelTypes = [
-        ChannelType.Text,
-        ChannelType.Announcement,
-        ChannelType.Rules,
-        ChannelType.Forum,
-        ChannelType.DM,
-        ChannelType.GroupDM
-    ];
 
     public async Task<ThreadChannel> CreateThreadAsync(ChannelCreateDto dto, long userId, long serverId) {
         if (dto.Name.Length is < 2 or > 128 && userId > 0)
@@ -34,14 +26,14 @@ public class ThreadService(IRepository<Channel> channels, IRepository<ThreadChan
             throw new ArgumentException("Thread channels must have a parent channel");
         var parentChannel = await _channels.GetAsync(dto.ParentId.Value) ?? throw new KeyNotFoundException("Parent channel not found");
 
-        if (!ThreadSafeChannelTypes.Contains(parentChannel.Type))
+        if (!parentChannel.Type.CanHaveThread())
             throw new InvalidOperationException("Parent channel must be one of: TEXT (1), ANNOUNCEMENT (3), RULES (4), FORUM (6), DM (9), GROUP_DM (10)");
 
         var t = new ThreadChannel {
             OwnerId = userId,
             ParentId = dto.ParentId.Value,
             ServerId = serverId,
-            Name = ChannelService.UnrestrictedNameChannelTypes.Contains(dto.Type) ?
+            Name = dto.Type.CanBeNamedWhatever() ?
                 dto.Name :
                 dto.Name.ToLower().Replace(' ', '-'),
             Description = dto.Description,

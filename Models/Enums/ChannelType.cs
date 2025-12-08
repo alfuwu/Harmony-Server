@@ -13,3 +13,12 @@ public enum ChannelType : ushort {
     GroupDM = 10,       // group direct message channel
     Unknown = 11        // unknown channel type
 }
+public static class ChannelTypeMethods {
+    public static bool IsServerChannel(this ChannelType type) =>
+        type != ChannelType.DM && type != ChannelType.GroupDM && type < ChannelType.Unknown;
+    public static bool CanBeNamedWhatever(this ChannelType type) =>
+        type == ChannelType.Category || type == ChannelType.Voice || type == ChannelType.Thread;
+    public static bool CanHaveThread(this ChannelType type) =>
+        type == ChannelType.Text || type == ChannelType.Announcement || type == ChannelType.Rules ||
+        type == ChannelType.Forum || type == ChannelType.DM || type == ChannelType.GroupDM;
+}

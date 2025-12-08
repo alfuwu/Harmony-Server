@@ -6,20 +6,26 @@ using Server.Services;
 
 namespace Server.Hubs;
 [Authorize]
-public class GatewayHub(IUserService userService) : Hub {
+public class GatewayHub(IUserService userService, IServerService serverService) : Hub {
     private readonly IUserService _userService = userService;
+    private readonly IServerService _serverService = serverService;
 
     public override async Task OnConnectedAsync() {
         // update user's last seen
         var uid = Context.User?.FindFirst("uid")?.Value;
-        if (long.TryParse(uid, out var id)) {
-            // update presence table / cache? idk
+        if (long.TryParse(uid, out long id)) {
+            var servers = await _serverService.GetServersAsync(id);
+
+            foreach (var server in servers)
+                await JoinServer(server.Id);
         }
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? ex) {
-        // Update presence
+        var uid = Context.User?.FindFirst("uid")?.Value;
+        if (long.TryParse(uid, out long id)) {
+        }
         await base.OnDisconnectedAsync(ex);
     }
 
@@ -32,11 +38,6 @@ public class GatewayHub(IUserService userService) : Hub {
         Groups.AddToGroupAsync(Context.ConnectionId, $"channel:{channelId}");
     public Task LeaveChannel(long channelId) =>
         Groups.RemoveFromGroupAsync(Context.ConnectionId, $"channel:{channelId}");
-
-    public Task JoinDm(long dmId) =>
-        Groups.AddToGroupAsync(Context.ConnectionId, $"dm:{dmId}");
-    public Task LeaveDm(long dmId) =>
-        Groups.RemoveFromGroupAsync(Context.ConnectionId, $"dm:{dmId}");
 
     public async Task SendMessage(Message msg) {
         //var uid = Context.User?.FindFirst("uid")?.Value;

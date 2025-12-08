@@ -43,16 +43,16 @@ public class RelationshipService(IServerService serverService, AppDbContext db) 
         if (id == targetId)
             return Relationship.Self;
 
-        var requesterFriends = await GetFriends(id);
+        var requestorFriends = await GetFriends(id);
         var targetFriends = await GetFriends(targetId);
 
-        if (requesterFriends.Contains(targetId))
+        if (requestorFriends.Contains(targetId))
             return Relationship.Friend;
 
-        var isFriendOfFriend = requesterFriends.Intersect(targetFriends).Any();
-        var sharedServers = (await _serverService.GetServersAsync(id))
-                            .Intersect(await _serverService.GetServersAsync(targetId));
-        var mutual = sharedServers.Any();
+        var isFriendOfFriend = requestorFriends.Intersect(targetFriends).Any();
+        var mutual = (await _serverService.GetServersAsync(id)).Select(s => s.Id)
+            .Intersect((await _serverService.GetServersAsync(targetId)).Select(s => s.Id))
+            .Any();
 
         if (mutual && isFriendOfFriend)
             return Relationship.MutualAndFriendOfFriend;

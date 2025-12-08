@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Server.DTOs.Input;
 using Server.DTOs.Output;
 using Server.Helpers;
+using Server.Hubs;
 using Server.Models;
 using Server.Services;
 using static System.IO.File;
@@ -35,7 +36,9 @@ public class UserController : ControllerBase {
     [HttpGet("@me")]
     public async Task<IActionResult> GetMe() {
         try {
-            return Ok(await _userService.GetByIdAsync(await JwtTokenHelper.GetId(_userService, User)));
+            long userId = await JwtTokenHelper.GetId(_userService, User);
+            UserWatchRegistry.AddWatcher(userId, userId);
+            return Ok(await _userService.GetByIdAsync(userId));
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });
         } catch (UnauthorizedAccessException e) {
@@ -56,6 +59,10 @@ public class UserController : ControllerBase {
             var user = await _userService.GetByIdAsync(userId) ?? throw new KeyNotFoundException("User not found");
             var dto = new UserDto(user);
             await dto.Redact(_relationshipService, user, requestorId);
+            if (requestorId.HasValue) {
+                UserWatchRegistry.AddWatcher(userId, requestorId.Value);
+                Console.WriteLine("added watcher");
+            }
             return Ok(dto);
         } catch (KeyNotFoundException e) {
             return NotFound(new { error = e.Message });

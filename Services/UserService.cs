@@ -1,16 +1,21 @@
 ﻿using System.Net.Mail;
 using Humanizer;
+using Microsoft.AspNetCore.SignalR;
 using Server.Data;
 using Server.DTOs.Input;
+using Server.DTOs.Output;
 using Server.Helpers;
+using Server.Hubs;
 using Server.Models;
 using Server.Repositories;
 
 using static BCrypt.Net.BCrypt;
 
 namespace Server.Services;
-public class UserService(IRepository<User> users, IConfiguration configuration, AppDbContext db) : IUserService {
+public class UserService(IHubContext<GatewayHub> gateway, IRepository<User> users, IRelationshipService relationshipService, IConfiguration configuration, AppDbContext db) : IUserService {
+    private readonly IHubContext<GatewayHub> _gateway = gateway;
     private readonly IRepository<User> _users = users;
+    private readonly IRelationshipService _relationshipService = relationshipService;
     private readonly IConfiguration _configuration = configuration;
     private readonly AppDbContext _db = db;
 
@@ -107,6 +112,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
     public async Task UpdateAsync(User user) {
         await ValidateData(user, user.Id);
         await _users.UpdateAsync(user);
+        await BroadcastChanges(user);
     }
 
     public async Task<string?> UpdateAvatarAsync(long userId, string? newAvatarHash) {
@@ -115,6 +121,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
 
         user.Avatar = newAvatarHash;
         await _users.UpdateAsync(user);
+        await BroadcastChanges(user);
 
         return oldAvatar;
     }
@@ -125,6 +132,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
 
         user.Banner = newBannerHash;
         await _users.UpdateAsync(user);
+        await BroadcastChanges(user);
 
         return oldBanner;
     }
@@ -135,6 +143,7 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
 
         user.NameFont = newFontHash;
         await _users.UpdateAsync(user);
+        await BroadcastChanges(user);
 
         return oldFont;
     }
@@ -142,5 +151,18 @@ public class UserService(IRepository<User> users, IConfiguration configuration, 
     public async Task UpdateSettingsAsync(UserSettings newSettings) {
         _db.UserSettings.Update(newSettings);
         await _db.SaveChangesAsync();
+    }
+
+    public async Task BroadcastChanges(User user) {
+        Console.WriteLine("broadcasting change for user: " + user.Id);
+        var watchers = UserWatchRegistry.GetWatchers(user.Id);
+        Console.WriteLine("watchers: " + watchers);
+
+        foreach (var watcherId in watchers) {
+            var dto = new UserDto(user);
+            await dto.Redact(_relationshipService, user, watcherId);
+
+            await _gateway.Clients.User(watcherId.ToString()).SendAsync("UpdUsr", dto);
+        }
     }
 }

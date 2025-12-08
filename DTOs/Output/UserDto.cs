@@ -24,7 +24,7 @@ public class UserDto(User user) {
     public ulong Flags { get; set; } = user.Flags;
 
     public async Task<Relationship> Redact(IRelationshipService relationships, User self, long? requestor) {
-        var relationship = requestor != null ? await relationships.GetUserContext(Id, requestor.Value) : Relationship.Everyone;
+        var relationship = requestor.HasValue ? await relationships.GetUserContext(Id, requestor.Value) : Relationship.Everyone;
         if (!relationships.CanSee(relationship, self.WhoCanSeeEmail))
             Email = null;
         if (!relationships.CanSee(relationship, self.WhoCanSeePhoneNumber))

@@ -4,10 +4,11 @@ using Server.Models;
 using Server.Repositories;
 
 namespace Server.Services;
-public class ServerService(IRepository<GuildServer> servers, IRepository<Channel> channels, IRepository<Message> messages, AppDbContext db) : IServerService {
+public class ServerService(IRepository<GuildServer> servers, IRepository<Channel> channels, IRepository<Message> messages, IRepository<User> users, AppDbContext db) : IServerService {
     private readonly IRepository<GuildServer> _servers = servers;
     private readonly IRepository<Channel> _channels = channels;
     private readonly IRepository<Message> _messages = messages;
+    private readonly IRepository<User> _users = users;
     private readonly AppDbContext _db = db;
 
     public async Task<GuildServer> CreateServerAsync(ServerCreateDto dto, long userId) {
@@ -37,9 +38,13 @@ public class ServerService(IRepository<GuildServer> servers, IRepository<Channel
         if (server.Members.Select(m => m.UserId).Contains(userId))
             throw new InvalidOperationException("User is already a member of this server");
 
+        var user = await _users.GetAsync(userId) ?? throw new KeyNotFoundException("User does not exist");
+
         server.Members.Add(new Member {
             UserId = userId,
+            User = user,
             ServerId = serverId,
+            Server = server,
             JoinedAt = DateTime.UtcNow,
         });
         await _servers.UpdateAsync(server);

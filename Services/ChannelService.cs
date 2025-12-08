@@ -1,17 +1,14 @@
-﻿using Server.DTOs.Input;
+﻿using Server.Data;
+using Server.DTOs.Input;
 using Server.Models;
 using Server.Models.Enums;
 using Server.Repositories;
 
 namespace Server.Services;
-public class ChannelService(IRepository<Channel> channels, IRepository<GuildServer> servers) : IChannelService {
+public class ChannelService(IRepository<Channel> channels, IRepository<GuildServer> servers, AppDbContext db) : IChannelService {
     private readonly IRepository<Channel> _channels = channels;
     private readonly IRepository<GuildServer> _servers = servers;
-    public static readonly ChannelType[] UnrestrictedNameChannelTypes = [
-        ChannelType.Category,
-        ChannelType.Voice,
-        ChannelType.Thread
-    ];
+    private readonly AppDbContext _db = db;
 
     public async Task<Channel> CreateChannelAsync(ChannelCreateDto dto, long serverId, long userId) {
         if (dto.Name.Length is < 2 or > 128 && userId > 0)
@@ -41,7 +38,7 @@ public class ChannelService(IRepository<Channel> channels, IRepository<GuildServ
         var c = new Channel {
             ParentId = dto.ParentId,
             ServerId = serverId,
-            Name = UnrestrictedNameChannelTypes.Contains(dto.Type) ?
+            Name = dto.Type.CanBeNamedWhatever() ?
                 dto.Name :
                 dto.Name.ToLower().Replace(' ', '-'),
             Description = dto.Description,
@@ -63,4 +60,7 @@ public class ChannelService(IRepository<Channel> channels, IRepository<GuildServ
 
     public async Task<IEnumerable<Channel>> GetAllChannelsAsync(long serverId) =>
         await _channels.GetForIdAsync(serverId);
+
+    public async Task<Channel> GetServerChannelAsync(AbstractChannel chan) =>
+        (chan.Type == ChannelType.Thread ? await _db.Threads.FindAsync(chan.Id) : await _channels.GetAsync(chan.Id)) ?? throw new KeyNotFoundException("Channel does not exist");
 }

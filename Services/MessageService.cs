@@ -2,14 +2,17 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.DTOs.Input;
+using Server.DTOs.Output;
 using Server.Hubs;
 using Server.Models;
+using Server.Models.Enums;
 using Server.Repositories;
 
 namespace Server.Services;
-public class MessageService(IHubContext<GatewayHub> gateway, IRepository<Message> messages, AppDbContext db) : IMessageService {
+public class MessageService(IHubContext<GatewayHub> gateway, IRepository<Message> messages, IChannelService channelService, AppDbContext db) : IMessageService {
     private readonly IHubContext<GatewayHub> _gateway = gateway;
     private readonly IRepository<Message> _messages = messages;
+    private readonly IChannelService _channelService = channelService;
     private readonly AppDbContext _db = db;
 
     public async Task<Message> SendMessageAsync(MessageCreateDto dto, long channelId, long userId) {
@@ -19,8 +22,7 @@ public class MessageService(IHubContext<GatewayHub> gateway, IRepository<Message
             else if (dto.Content.Length > 5000)
                 throw new ArgumentException("Message content exceeds maximum length of 5000 characters");
 
-        if (await _db.AbstractChannels.FindAsync(channelId) == null)
-            throw new KeyNotFoundException("Channel not found");
+        var chan = await _db.AbstractChannels.FindAsync(channelId) ?? throw new KeyNotFoundException("Channel not found");
 
         var m = new Message {
             ChannelId = channelId,
@@ -30,15 +32,18 @@ public class MessageService(IHubContext<GatewayHub> gateway, IRepository<Message
         };
         await _messages.AddAsync(m, false);
         if (dto.Attachments != null && dto.Attachments.Length != 0) {
-            var attachments = await db.Attachments
+            var attachments = await _db.Attachments
                 .Where(a => dto.Attachments.Contains(a.Id))
                 .ToListAsync();
 
             foreach (var att in attachments)
                 att.MessageId = m.Id;
         }
-        await db.SaveChangesAsync();
-        await _gateway.Clients.Group($"channel:{channelId}").SendAsync("RecvMsg", m);
+        await _db.SaveChangesAsync();
+        string group = chan.Type.IsServerChannel() ?
+            $"server:{(await _channelService.GetServerChannelAsync(chan)).ServerId}" :
+            $"channel:{chan.Id}";
+        await _gateway.Clients.Group(group).SendAsync("RecvMsg", new MessageWithNonceDto(m, dto.Nonce));
         return m;
     }
 
